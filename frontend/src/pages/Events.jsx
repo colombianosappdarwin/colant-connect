@@ -1,6 +1,7 @@
 import { useState } from "react"
 import axios from "axios"
 import { texts } from "../translations"
+import { API_URL } from "../config";
 
 const FESTIVAL_IMAGE =
   "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782313087/colombia-florece_yh0vna.png"
@@ -38,7 +39,7 @@ function Events({
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/events/events/${eventId}/join`,
+        `${API_URL}`,
         {},
         {
           headers: {
@@ -66,7 +67,7 @@ function Events({
 
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/events/events/${eventId}/attendees`
+        `${API_URL}`
       )
 
       setAttendeesByEvent((prev) => ({
@@ -86,7 +87,7 @@ function Events({
 
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/gallery/${eventId}`
+        `${API_URL}`
       )
 
       setGalleryByEvent((prev) => ({
@@ -106,7 +107,7 @@ function Events({
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/events/events/",
+        "${API_URL}",
         {
           title,
           description,

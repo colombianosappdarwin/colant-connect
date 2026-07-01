@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_URL } from "./config";
 
 function Register({ onLoginClick }) {
   const [language, setLanguage] = useState("es");
@@ -82,7 +83,7 @@ function Register({ onLoginClick }) {
     e.preventDefault();
 
     try {
-      await axios.post("http://127.0.0.1:8000/auth/register", formData, {
+      await axios.post(`${API_URL}/auth/register`, formData, {
         headers: {
           "Content-Type": "application/json",
         },

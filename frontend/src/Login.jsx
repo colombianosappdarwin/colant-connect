@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_URL } from "./config";
 import backgroundImage from "./assets/Colant.png";
 
 function Login({ onRegisterClick }) {
@@ -43,7 +44,7 @@ function Login({ onRegisterClick }) {
       formData.append("password", password);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/login",
+        `${API_URL}/auth/login`,
         formData,
         {
           headers: {

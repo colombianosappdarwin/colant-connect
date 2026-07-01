@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
+import { API_URL } from "./config"
 import Register from "./Register"
 import Login from "./Login"
 import EventDetail from "./EventDetail"
@@ -41,7 +42,7 @@ function App() {
     const token = localStorage.getItem("token")
 
     if (token) {
-      axios.get("http://127.0.0.1:8000/auth/me", {
+      axios.get(`${API_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -66,19 +67,19 @@ function App() {
   }, [activeTab, events])
 
   const loadEvents = () => {
-    axios.get("http://127.0.0.1:8000/events/events/")
+    axios.get(`${API_URL}/events/events/`)
       .then((response) => setEvents(response.data))
       .catch((error) => console.log(error))
   }
 
   const loadBusinesses = () => {
-    axios.get("http://127.0.0.1:8000/businesses/")
+    axios.get(`${API_URL}/businesses/`)
       .then((response) => setBusinesses(response.data))
       .catch((error) => console.log(error))
   }
 
   const loadHomeGallery = () => {
-    axios.get(`http://127.0.0.1:8000/gallery/${HOME_EVENT_ID}`)
+    axios.get(`${API_URL}/gallery/${HOME_EVENT_ID}`)
       .then((response) => setGallery(response.data))
       .catch((error) => console.log(error))
   }
@@ -86,7 +87,7 @@ function App() {
   const loadGallery = async (eventId) => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/gallery/${eventId}`
+        `${API_URL}/gallery/${eventId}`
       )
 
       setGalleryByEvent((prev) => ({
