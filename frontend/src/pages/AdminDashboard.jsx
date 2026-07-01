@@ -1,14 +1,19 @@
-import { useState } from "react"
-import Dashboard from "./admin/Dashboard"
-import Users from "./admin/Users"
+import { useState } from "react";
+
+import Dashboard from "./admin/Dashboard";
+import Users from "./admin/Users";
+import EventsAdmin from "./admin/EventsAdmin";
+import GalleryAdmin from "./admin/GalleryAdmin";
+import NotificationsAdmin from "./admin/NotificationsAdmin";
+import StatisticsAdmin from "./admin/StatisticsAdmin";
+import SettingsAdmin from "./admin/SettingsAdmin";
 
 function AdminDashboard({
   events,
-  businesses,
   gallery,
   userProfile
 }) {
-  const [adminSection, setAdminSection] = useState("dashboard")
+  const [adminSection, setAdminSection] = useState("dashboard");
 
   return (
     <div>
@@ -24,18 +29,20 @@ function AdminDashboard({
       {adminSection === "dashboard" && (
         <Dashboard
           events={events}
-          businesses={businesses}
           gallery={gallery}
           userProfile={userProfile}
           setAdminSection={setAdminSection}
         />
       )}
 
-      {adminSection === "users" && (
-        <Users />
-      )}
+      {adminSection === "users" && <Users />}
+      {adminSection === "events" && <EventsAdmin />}
+      {adminSection === "gallery" && <GalleryAdmin />}
+      {adminSection === "notifications" && <NotificationsAdmin />}
+      {adminSection === "statistics" && <StatisticsAdmin />}
+      {adminSection === "settings" && <SettingsAdmin />}
     </div>
-  )
+  );
 }
 
-export default AdminDashboard
+export default AdminDashboard;

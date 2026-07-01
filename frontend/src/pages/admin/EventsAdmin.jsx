@@ -1,15 +1,15 @@
-function StatisticsAdmin() {
+function EventsAdmin() {
   return (
     <div>
       <h1 className="text-3xl font-extrabold text-blue-950 mb-2">
-        Statistics
+        Events
       </h1>
 
       <p className="text-slate-600 mb-6">
-        Review user, event and community data.
+        Create, edit and manage COLANT events.
       </p>
     </div>
   );
 }
 
-export default StatisticsAdmin;
+export default EventsAdmin;

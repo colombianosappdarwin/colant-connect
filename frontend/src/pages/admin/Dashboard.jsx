@@ -2,16 +2,13 @@ import AdminStatCard from "../../components/admin/AdminStatCard";
 
 function Dashboard({
   events,
-  businesses,
   gallery,
   userProfile,
   setAdminSection
 }) {
   return (
     <div>
-
       <div className="mb-8">
-
         <p className="text-slate-500 font-semibold">
           Welcome back
         </p>
@@ -23,11 +20,9 @@ function Dashboard({
         <p className="text-slate-600 mt-2">
           COLANT Connect Administration Panel
         </p>
-
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-
         <div
           onClick={() => setAdminSection("users")}
           className="cursor-pointer hover:scale-105 transition"
@@ -65,18 +60,6 @@ function Dashboard({
         </div>
 
         <div
-          onClick={() => setAdminSection("businesses")}
-          className="cursor-pointer hover:scale-105 transition"
-        >
-          <AdminStatCard
-            title="Businesses"
-            value={businesses?.length || 0}
-            icon="🏪"
-            color="bg-orange-500"
-          />
-        </div>
-
-        <div
           onClick={() => setAdminSection("notifications")}
           className="cursor-pointer hover:scale-105 transition"
         >
@@ -101,18 +84,6 @@ function Dashboard({
         </div>
 
         <div
-          onClick={() => setAdminSection("sponsors")}
-          className="cursor-pointer hover:scale-105 transition"
-        >
-          <AdminStatCard
-            title="Sponsors"
-            value={businesses?.length || 0}
-            icon="🤝"
-            color="bg-cyan-600"
-          />
-        </div>
-
-        <div
           onClick={() => setAdminSection("settings")}
           className="cursor-pointer hover:scale-105 transition"
         >
@@ -123,9 +94,7 @@ function Dashboard({
             color="bg-slate-700"
           />
         </div>
-
       </div>
-
     </div>
   );
 }
