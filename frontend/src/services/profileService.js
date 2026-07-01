@@ -1,32 +1,30 @@
-import axios from "axios"
+import axios from "axios";
 import { API_URL } from "../config";
 
-const API_URL = "${API_URL}"
-
 const getToken = () => {
-  return localStorage.getItem("token")
-}
+  return localStorage.getItem("token");
+};
 
 export const getProfile = async () => {
-  const token = getToken()
+  const token = getToken();
 
   const response = await axios.get(`${API_URL}/auth/me`, {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-  return response.data
-}
+  return response.data;
+};
 
 export const updateProfile = async (profileData) => {
-  const token = getToken()
+  const token = getToken();
 
   const response = await axios.put(`${API_URL}/auth/me`, profileData, {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-  return response.data
-}
+  return response.data;
+};
