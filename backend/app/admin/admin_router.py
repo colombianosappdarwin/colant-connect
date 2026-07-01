@@ -43,18 +43,33 @@ def update_user_role(
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
 
     new_role = payload.get("role")
 
-    if new_role not in ["user", "staff", "admin", "super_admin"]:
-        raise HTTPException(status_code=400, detail="Invalid role")
+    if new_role not in [
+        "user",
+        "staff",
+        "admin",
+        "super_admin"
+    ]:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid role"
+        )
 
     user.role = new_role
+
     db.commit()
     db.refresh(user)
 
-    return user
+    return {
+        "message": "User role updated successfully",
+        "user": user
+    }
 
 
 @router.put("/users/{user_id}/block")
@@ -65,13 +80,53 @@ def block_user(
 ):
     require_admin(current_user)
 
+    if str(current_user.id) == user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot block your own account."
+        )
+
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
 
     user.is_active = False
+
     db.commit()
     db.refresh(user)
 
-    return user
+    return {
+        "message": "User blocked successfully",
+        "user": user
+    }
+
+
+@router.put("/users/{user_id}/activate")
+def activate_user(
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    require_admin(current_user)
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    user.is_active = True
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "User activated successfully",
+        "user": user
+    }

@@ -7,7 +7,7 @@ from app.auth.service import get_user_by_email
 from app.auth.jwt_handler import create_access_token
 from app.core.security import verify_token
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import date
+from datetime import date, datetime
 
 router = APIRouter()
 
@@ -39,8 +39,16 @@ def hash_password(password: str):
 
 @router.post("/register")
 def register(user: UserRegister):
-
     db = SessionLocal()
+
+    existing_user = get_user_by_email(db, user.email)
+
+    if existing_user:
+        db.close()
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
 
     hashed_password = hash_password(user.password)
 
@@ -61,6 +69,7 @@ def register(user: UserRegister):
     }
 
     new_user = create_user(db, user_data)
+    db.close()
 
     return {
         "message": "User registered successfully",
@@ -71,7 +80,6 @@ def register(user: UserRegister):
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-
     db = SessionLocal()
 
     db_user = get_user_by_email(
@@ -80,19 +88,31 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     )
 
     if not db_user:
+        db.close()
         raise HTTPException(
             status_code=401,
             detail="Invalid email"
+        )
+
+    if not db_user.is_active:
+        db.close()
+        raise HTTPException(
+            status_code=403,
+            detail="User account is blocked"
         )
 
     if not pwd_context.verify(
         form_data.password,
         db_user.password_hash
     ):
+        db.close()
         raise HTTPException(
             status_code=401,
             detail="Invalid password"
         )
+
+    db_user.last_login = datetime.utcnow()
+    db.commit()
 
     token = create_access_token(
         data={
@@ -100,10 +120,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         }
     )
 
+    email = db_user.email
+    role = db_user.role
+
+    db.close()
+
     return {
         "access_token": token,
         "token_type": "bearer",
-        "email": db_user.email
+        "email": email,
+        "role": role
     }
 
 
@@ -111,18 +137,25 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 def get_me(
     email: str = Depends(verify_token)
 ):
-
     db = SessionLocal()
 
     user = get_user_by_email(db, email)
 
     if not user:
+        db.close()
         raise HTTPException(
             status_code=404,
             detail="User not found"
         )
 
-    return {
+    if not user.is_active:
+        db.close()
+        raise HTTPException(
+            status_code=403,
+            detail="User account is blocked"
+        )
+
+    result = {
         "id": str(user.id),
         "full_name": user.full_name,
         "email": user.email,
@@ -135,5 +168,14 @@ def get_me(
         "visa_type": user.visa_type,
         "arrival_date": user.arrival_date,
         "preferred_language": user.preferred_language,
-        "profile_photo_url": user.profile_photo_url
+        "profile_photo_url": user.profile_photo_url,
+        "role": user.role,
+        "is_active": user.is_active,
+        "email_verified": user.email_verified,
+        "last_login": user.last_login,
+        "created_at": user.created_at
     }
+
+    db.close()
+
+    return result
