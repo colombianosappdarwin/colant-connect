@@ -4,7 +4,11 @@ from passlib.context import CryptContext
 from app.database.database import SessionLocal
 from app.auth.service import create_user
 from app.auth.service import get_user_by_email
-from app.auth.jwt_handler import create_access_token
+from app.auth.jwt_handler import (
+    create_access_token,
+    create_password_reset_token,
+    verify_password_reset_token
+)
 from app.core.security import verify_token
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import date, datetime
@@ -31,6 +35,15 @@ class UserRegister(BaseModel):
     arrival_date: date | None = None
     preferred_language: str = "es"
     profile_photo_url: str = ""
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 def hash_password(password: str):
@@ -130,6 +143,73 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "token_type": "bearer",
         "email": email,
         "role": role
+    }
+
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest):
+    db = SessionLocal()
+
+    user = get_user_by_email(db, request.email)
+
+    if not user:
+        db.close()
+        return {
+            "message": "If this email exists, a password reset link will be sent."
+        }
+
+    if not user.is_active:
+        db.close()
+        raise HTTPException(
+            status_code=403,
+            detail="User account is blocked"
+        )
+
+    reset_token = create_password_reset_token(user.email)
+
+    db.close()
+
+    return {
+        "message": "Password reset token generated successfully",
+        "reset_token": reset_token
+    }
+
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest):
+    email = verify_password_reset_token(request.token)
+
+    if not email:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset token"
+        )
+
+    db = SessionLocal()
+
+    user = get_user_by_email(db, email)
+
+    if not user:
+        db.close()
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    if not user.is_active:
+        db.close()
+        raise HTTPException(
+            status_code=403,
+            detail="User account is blocked"
+        )
+
+    user.password_hash = hash_password(request.new_password)
+    db.commit()
+
+    db.close()
+
+    return {
+        "message": "Password updated successfully"
     }
 
 
