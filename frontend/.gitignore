@@ -1,0 +1,54 @@
+# =========================
+# Python
+# =========================
+backend/venv/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Variables de entorno
+backend/.env
+.env
+
+# =========================
+# React / Node
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# =========================
+# Software
+# =========================
+Software/
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Logs
+# =========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Sistema
+# =========================
+.DS_Store
+Thumbs.db
+# Node
+node_modules/
+dist/
+build/
+
+# Variables
+.env
+.env.local
