@@ -1,4 +1,4 @@
-import AdminStatCard from "../../components/admin/AdminStatCard"
+import AdminStatCard from "../../components/admin/AdminStatCard";
 
 function Dashboard({
   events,
@@ -21,12 +21,24 @@ function Dashboard({
         </h1>
 
         <p className="text-slate-600 mt-2">
-          Manage COLANT Connect from one place.
+          COLANT Connect Administration Panel
         </p>
 
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+
+        <div
+          onClick={() => setAdminSection("users")}
+          className="cursor-pointer hover:scale-105 transition"
+        >
+          <AdminStatCard
+            title="Users"
+            value="Manage"
+            icon="👥"
+            color="bg-blue-600"
+          />
+        </div>
 
         <div
           onClick={() => setAdminSection("events")}
@@ -45,7 +57,7 @@ function Dashboard({
           className="cursor-pointer hover:scale-105 transition"
         >
           <AdminStatCard
-            title="Photos"
+            title="Gallery"
             value={gallery?.length || 0}
             icon="📸"
             color="bg-pink-600"
@@ -65,21 +77,57 @@ function Dashboard({
         </div>
 
         <div
-          onClick={() => setAdminSection("users")}
+          onClick={() => setAdminSection("notifications")}
           className="cursor-pointer hover:scale-105 transition"
         >
           <AdminStatCard
-            title="Users"
-            value="Manage"
-            icon="👥"
-            color="bg-blue-600"
+            title="Notifications"
+            value="Send"
+            icon="🔔"
+            color="bg-red-600"
+          />
+        </div>
+
+        <div
+          onClick={() => setAdminSection("statistics")}
+          className="cursor-pointer hover:scale-105 transition"
+        >
+          <AdminStatCard
+            title="Statistics"
+            value="View"
+            icon="📊"
+            color="bg-purple-600"
+          />
+        </div>
+
+        <div
+          onClick={() => setAdminSection("sponsors")}
+          className="cursor-pointer hover:scale-105 transition"
+        >
+          <AdminStatCard
+            title="Sponsors"
+            value={businesses?.length || 0}
+            icon="🤝"
+            color="bg-cyan-600"
+          />
+        </div>
+
+        <div
+          onClick={() => setAdminSection("settings")}
+          className="cursor-pointer hover:scale-105 transition"
+        >
+          <AdminStatCard
+            title="Settings"
+            value="System"
+            icon="⚙️"
+            color="bg-slate-700"
           />
         </div>
 
       </div>
 
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

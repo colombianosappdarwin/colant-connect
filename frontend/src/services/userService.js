@@ -48,3 +48,20 @@ export const blockUser = async (userId) => {
 
   return response.data;
 };
+
+export const activateUser = async (userId) => {
+  const token = getToken();
+
+  const response = await axios.put(
+    `${API_URL}/admin/users/${userId}/activate`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
+
