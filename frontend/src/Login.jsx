@@ -7,6 +7,7 @@ function Login({ onRegisterClick }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [language, setLanguage] = useState("es");
+  const [forgotMode, setForgotMode] = useState(false);
 
   const texts = {
     es: {
@@ -15,10 +16,15 @@ function Login({ onRegisterClick }) {
       email: "Correo electrónico",
       password: "Contraseña",
       login: "Iniciar Sesión",
+      forgot: "¿Olvidaste tu contraseña?",
+      sendReset: "Enviar recuperación",
+      backLogin: "Volver al inicio de sesión",
       noAccount: "¿No tienes cuenta?",
       register: "Regístrate abajo",
       success: "Login correcto",
       error: "Correo o contraseña incorrectos",
+      resetSuccess: "Solicitud de recuperación enviada",
+      resetError: "Error enviando recuperación",
     },
     en: {
       title: "COLANT",
@@ -26,10 +32,15 @@ function Login({ onRegisterClick }) {
       email: "Email",
       password: "Password",
       login: "Sign In",
+      forgot: "Forgot your password?",
+      sendReset: "Send reset request",
+      backLogin: "Back to login",
       noAccount: "Don't have an account?",
       register: "Create an account below",
       success: "Login successful",
       error: "Incorrect email or password",
+      resetSuccess: "Recovery request sent",
+      resetError: "Error sending recovery request",
     },
   };
 
@@ -43,15 +54,11 @@ function Login({ onRegisterClick }) {
       formData.append("username", email);
       formData.append("password", password);
 
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/auth/login`, formData, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("email", response.data.email);
@@ -61,6 +68,26 @@ function Login({ onRegisterClick }) {
       window.location.reload();
     } catch (error) {
       alert(t.error);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+
+    if (!email) {
+      alert(t.email);
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, {
+        email,
+      });
+
+      alert(response.data.message || t.resetSuccess);
+      setForgotMode(false);
+    } catch (error) {
+      alert(t.resetError);
     }
   };
 
@@ -111,30 +138,65 @@ function Login({ onRegisterClick }) {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          <input
-            type="email"
-            placeholder={t.email}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
-          />
+        {!forgotMode ? (
+          <form onSubmit={handleLogin} className="space-y-5">
+            <input
+              type="email"
+              placeholder={t.email}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
+            />
 
-          <input
-            type="password"
-            placeholder={t.password}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
-          />
+            <input
+              type="password"
+              placeholder={t.password}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
+            />
 
-          <button
-            type="submit"
-            className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-2xl shadow-lg transition"
-          >
-            {t.login}
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-2xl shadow-lg transition"
+            >
+              {t.login}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setForgotMode(true)}
+              className="w-full text-center text-blue-700 font-bold hover:text-blue-900 transition"
+            >
+              {t.forgot}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleForgotPassword} className="space-y-5">
+            <input
+              type="email"
+              placeholder={t.email}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
+            />
+
+            <button
+              type="submit"
+              className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-2xl shadow-lg transition"
+            >
+              {t.sendReset}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setForgotMode(false)}
+              className="w-full text-center text-blue-700 font-bold hover:text-blue-900 transition"
+            >
+              {t.backLogin}
+            </button>
+          </form>
+        )}
 
         <p className="text-center text-blue-950 mt-8">
           {t.noAccount}
