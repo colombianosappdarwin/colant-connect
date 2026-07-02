@@ -2,23 +2,38 @@ import EventMap from "./EventMap"
 import Supporters from "./components/Supporters"
 import { texts } from "./translations"
 
-const EVENT_IMAGE_URL =
+const DEFAULT_IMAGE =
   "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782313087/colombia-florece_yh0vna.png"
 
-const EVENT_VIDEO_URL =
+const DEFAULT_VIDEO =
   "https://res.cloudinary.com/dtlmi9fgx/video/upload/v1782313263/Viva_Colombia_Fest_2025_Darwin_Waterfront_gcxqqe.mp4"
 
 function EventDetail({ event, language = "es" }) {
   const t = texts[language]
 
+  const title = event?.title || "Colombia Florece"
+
+  const image =
+    event?.image_url ||
+    DEFAULT_IMAGE
+
+  const description =
+    event?.description ||
+    t.eventDescription
+
+  const location =
+    event?.location ||
+    "Darwin Waterfront"
+
   return (
     <div>
+
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
 
         <div className="p-5">
 
           <h1 className="text-4xl font-extrabold text-blue-950 mb-4">
-            Colombia Florece
+            {title}
           </h1>
 
           <div className="mb-6 bg-blue-50 rounded-3xl p-4 border border-blue-100">
@@ -30,11 +45,11 @@ function EventDetail({ event, language = "es" }) {
             <video
               controls
               playsInline
-              poster={EVENT_IMAGE_URL}
+              poster={image}
               className="w-full rounded-2xl shadow-lg bg-black"
             >
               <source
-                src={EVENT_VIDEO_URL}
+                src={DEFAULT_VIDEO}
                 type="video/mp4"
               />
             </video>
@@ -47,7 +62,7 @@ function EventDetail({ event, language = "es" }) {
 
             <p>🕓 4 PM - 10 PM</p>
 
-            <p>📍 Darwin Waterfront</p>
+            <p>📍 {location}</p>
 
             <p>👥 {t.colantCommunity}</p>
 
@@ -58,31 +73,24 @@ function EventDetail({ event, language = "es" }) {
           </h2>
 
           <p className="text-gray-700 text-sm leading-relaxed mb-6">
-            {t.eventDescription}
+            {description}
           </p>
 
-          {/* MAPA */}
-
           <div className="mt-8">
-
             <EventMap
               compact
               language={language}
             />
-
           </div>
 
-          {/* PATROCINADORES */}
-
           <div className="mt-10">
-
             <Supporters />
-
           </div>
 
         </div>
 
       </div>
+
     </div>
   )
 }

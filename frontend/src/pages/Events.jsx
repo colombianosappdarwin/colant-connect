@@ -1,184 +1,37 @@
-import { useState } from "react"
-import axios from "axios"
 import { texts } from "../translations"
-import { API_URL } from "../config";
 
 const FESTIVAL_IMAGE =
   "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782313087/colombia-florece_yh0vna.png"
 
 function Events({
-  events,
-  setEvents,
-  businesses,
-  attendeesByEvent,
-  setAttendeesByEvent,
-  galleryByEvent,
-  setGalleryByEvent,
+  events = [],
+  businesses = [],
   userProfile,
-  language = "es"
+  language = "es",
 }) {
   const t = texts[language]
 
-  const ADMIN_EMAIL = "jeison@gmail.com"
+  const fallbackEvents = [
+    {
+      id: "colombia-florece-2026",
+      title: "Colombia Florece",
+      description:
+        "A cultural festival celebrating Colombian food, music, dance, community and connection in Darwin.",
+      location: "Darwin Waterfront",
+      image_url: FESTIVAL_IMAGE,
+    },
+  ]
 
-  const isAdmin =
-    userProfile?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
-
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("")
-  const [eventDate, setEventDate] = useState("")
-
-  const joinEvent = async (eventId) => {
-    const token = localStorage.getItem("token")
-
-    if (!token) {
-      alert(t.mustLogin)
-      return
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_URL}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      )
-
-      alert(response.data.message)
-
-      if (isAdmin) {
-        loadAttendees(eventId)
-      }
-    } catch (error) {
-      console.log(error)
-      alert(t.joinError)
-    }
-  }
-
-  const loadAttendees = async (eventId) => {
-    if (!isAdmin) {
-      alert("No tienes permiso para ver asistentes.")
-      return
-    }
-
-    try {
-      const response = await axios.get(
-        `${API_URL}`
-      )
-
-      setAttendeesByEvent((prev) => ({
-        ...prev,
-        [eventId]: response.data
-      }))
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  const loadGallery = async (eventId) => {
-    if (!isAdmin) {
-      alert("No tienes permiso para administrar fotos.")
-      return
-    }
-
-    try {
-      const response = await axios.get(
-        `${API_URL}`
-      )
-
-      setGalleryByEvent((prev) => ({
-        ...prev,
-        [eventId]: response.data
-      }))
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  const createEvent = async () => {
-    if (!isAdmin) {
-      alert("No tienes permiso para crear eventos.")
-      return
-    }
-
-    try {
-      const response = await axios.post(
-        "${API_URL}",
-        {
-          title,
-          description,
-          location,
-          event_date: new Date(eventDate).toISOString()
-        }
-      )
-
-      setEvents([...events, response.data])
-
-      setTitle("")
-      setDescription("")
-      setLocation("")
-      setEventDate("")
-    } catch (error) {
-      console.log(error)
-      alert("Error al crear el evento.")
-    }
-  }
+  const visibleEvents = events.length > 0 ? events : fallbackEvents
 
   return (
     <>
       <h3 className="text-3xl font-extrabold text-blue-950 mb-5">
-        {t.events}
+        {t.events || "Events"}
       </h3>
 
-      {isAdmin && (
-        <div className="bg-gray-100 p-4 rounded-2xl mb-6">
-          <h4 className="font-bold mb-3">
-            {t.createEvent}
-          </h4>
-
-          <input
-            placeholder={t.title}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 mb-2 rounded-xl border"
-          />
-
-          <input
-            placeholder={t.description}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-3 mb-2 rounded-xl border"
-          />
-
-          <input
-            placeholder={t.city}
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full p-3 mb-2 rounded-xl border"
-          />
-
-          <input
-            type="datetime-local"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            className="w-full p-3 mb-3 rounded-xl border"
-          />
-
-          <button
-            onClick={createEvent}
-            className="bg-green-600 text-white w-full py-3 rounded-xl font-bold"
-          >
-            {t.createEvent}
-          </button>
-        </div>
-      )}
-
       <div className="grid gap-5">
-        {events.map((event) => {
+        {visibleEvents.map((event) => {
           const eventBusinesses = businesses.filter(
             (business) => business.event_id === event.id
           )
@@ -189,8 +42,8 @@ function Events({
               className="bg-white rounded-[28px] shadow-xl border border-slate-200 overflow-hidden"
             >
               <img
-                src={FESTIVAL_IMAGE}
-                alt="Colombia Florece"
+                src={event.image_url || FESTIVAL_IMAGE}
+                alt={event.title}
                 className="w-full h-52 object-cover"
               />
 
@@ -210,69 +63,13 @@ function Events({
                 <div className="grid gap-2 mt-4 text-sm text-slate-700">
                   <p>📅 Saturday 11 July 2026</p>
                   <p>🕓 4 PM - 10 PM</p>
-                  <p>📍 {event.location}</p>
+                  <p>📍 {event.location || "Darwin Waterfront"}</p>
                   <p>👥 Comunidad COLANT</p>
                 </div>
 
-                <button
-                  onClick={() => joinEvent(event.id)}
-                  className="mt-5 bg-blue-700 text-white w-full py-3 rounded-2xl font-bold shadow-md"
-                >
-                  {t.join}
-                </button>
-
-                {isAdmin && (
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => loadAttendees(event.id)}
-                      className="bg-purple-600 text-white flex-1 py-3 rounded-2xl text-sm font-bold"
-                    >
-                      {t.attendees}
-                    </button>
-
-                    <button
-                      onClick={() => loadGallery(event.id)}
-                      className="bg-pink-600 text-white flex-1 py-3 rounded-2xl text-sm font-bold"
-                    >
-                      {t.photos}
-                    </button>
-                  </div>
-                )}
-
-                {isAdmin && attendeesByEvent[event.id] && (
-                  <div className="mt-4 bg-purple-50 p-3 rounded-xl">
-                    <p className="font-bold text-purple-800 mb-2">
-                      👥 {t.attendees}: {attendeesByEvent[event.id].count}
-                    </p>
-
-                    {attendeesByEvent[event.id].attendees.map((attendee) => (
-                      <div
-                        key={attendee.id}
-                        className="bg-white p-3 rounded-xl mb-2 border"
-                      >
-                        <p className="font-bold text-blue-950">
-                          {attendee.full_name}
-                        </p>
-
-                        <p className="text-xs text-gray-600">
-                          {attendee.email}
-                        </p>
-
-                        <p className="text-xs text-gray-600">
-                          📍 {attendee.city_origin || t.cityNotRegistered}
-                        </p>
-
-                        <p className="text-xs text-gray-600">
-                          💼 {attendee.industry || t.industryNotRegistered}
-                        </p>
-
-                        <p className="text-xs text-gray-600">
-                          🎓 {attendee.visa_type || t.visaNotRegistered}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-5 bg-blue-700 text-white w-full py-3 rounded-2xl font-bold shadow-md text-center">
+                  Event Details
+                </div>
 
                 {eventBusinesses.length > 0 && (
                   <div className="mt-4 bg-yellow-50 p-3 rounded-xl">
@@ -308,6 +105,18 @@ function Events({
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {userProfile?.role === "admin" && (
+                  <div className="mt-4 bg-slate-100 rounded-2xl p-4">
+                    <p className="font-bold text-blue-950 text-sm">
+                      Admin Tools
+                    </p>
+                    <p className="text-xs text-slate-600 mt-1">
+                      Event management is available from the administrator
+                      dashboard.
+                    </p>
                   </div>
                 )}
               </div>
