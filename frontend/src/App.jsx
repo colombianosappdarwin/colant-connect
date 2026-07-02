@@ -42,11 +42,12 @@ function App() {
     const token = localStorage.getItem("token")
 
     if (token) {
-      axios.get(`${API_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+      axios
+        .get(`${API_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .then((response) => {
           setUserProfile(response.data)
         })
@@ -67,32 +68,33 @@ function App() {
   }, [activeTab, events])
 
   const loadEvents = () => {
-    axios.get(`${API_URL}/events/`)
+    axios
+      .get(`${API_URL}/events/events/`)
       .then((response) => setEvents(response.data))
       .catch((error) => console.log(error))
   }
 
   const loadBusinesses = () => {
-    axios.get(`${API_URL}/businesses/`)
+    axios
+      .get(`${API_URL}/businesses/`)
       .then((response) => setBusinesses(response.data))
       .catch((error) => console.log(error))
   }
 
   const loadHomeGallery = () => {
-    axios.get(`${API_URL}/gallery/${HOME_EVENT_ID}`)
+    axios
+      .get(`${API_URL}/gallery/${HOME_EVENT_ID}`)
       .then((response) => setGallery(response.data))
       .catch((error) => console.log(error))
   }
 
   const loadGallery = async (eventId) => {
     try {
-      const response = await axios.get(
-        `${API_URL}/gallery/${eventId}`
-      )
+      const response = await axios.get(`${API_URL}/gallery/${eventId}`)
 
       setGalleryByEvent((prev) => ({
         ...prev,
-        [eventId]: response.data
+        [eventId]: response.data,
       }))
     } catch (error) {
       console.log(error)
@@ -136,9 +138,7 @@ function App() {
                 {language === "es" ? "🇺🇸 English" : "🇨🇴 Español"}
               </button>
 
-              <div className="text-3xl">
-                🇨🇴🇦🇺
-              </div>
+              <div className="text-3xl">🇨🇴🇦🇺</div>
             </div>
           </div>
 
