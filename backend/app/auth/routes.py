@@ -9,6 +9,7 @@ from app.auth.jwt_handler import (
     create_password_reset_token,
     verify_password_reset_token
 )
+from app.auth.email_service import send_password_reset_email
 from app.core.security import verify_token
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import date, datetime
@@ -167,12 +168,20 @@ def forgot_password(request: ForgotPasswordRequest):
 
     reset_token = create_password_reset_token(user.email)
 
+    reset_url = (
+        "https://colant-connect-production.up.railway.app"
+        f"/reset-password?token={reset_token}"
+    )
+
+    send_password_reset_email(
+        to_email=user.email,
+        reset_url=reset_url
+    )
+
     db.close()
 
     return {
-        "message": "Password reset token generated successfully",
-        "reset_token": reset_token,
-        "reset_url": f"https://colant-connect-production.up.railway.app/reset-password?token={reset_token}"
+        "message": "Password reset email sent successfully"
     }
 
 
