@@ -67,7 +67,7 @@ function App() {
   }, [activeTab, events])
 
   const loadEvents = () => {
-    axios.get(`${API_URL}/events/events/`)
+    axios.get(`${API_URL}/events/`)
       .then((response) => setEvents(response.data))
       .catch((error) => console.log(error))
   }
