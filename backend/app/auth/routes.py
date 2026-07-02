@@ -171,7 +171,8 @@ def forgot_password(request: ForgotPasswordRequest):
 
     return {
         "message": "Password reset token generated successfully",
-        "reset_token": reset_token
+        "reset_token": reset_token,
+        "reset_url": f"https://colant-connect-production.up.railway.app/reset-password?token={reset_token}"
     }
 
 
