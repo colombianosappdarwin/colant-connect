@@ -10,7 +10,19 @@ function Home({
   setActiveTab
 }) {
   const t = texts[language]
-  const firstEvent = events[0]
+
+  const fallbackEvent = {
+    id: "colombia-florece-2026",
+    title: "Colombia Florece",
+    description:
+      "A community event celebrating Colombian culture, food, music, dance and connection in Darwin.",
+    location: "Darwin Waterfront",
+    event_date: "2026-07-11T16:00:00",
+    image_url: colombiaFlorece,
+    address: "Darwin Waterfront, Darwin NT, Australia"
+  }
+
+  const firstEvent = events && events.length > 0 ? events[0] : fallbackEvent
 
   return (
     <>
@@ -27,43 +39,45 @@ function Home({
         </button>
       </div>
 
-      {firstEvent && (
-        <div
-          onClick={() => {
-            setSelectedEventDetail(firstEvent)
-            setActiveTab("eventDetail")
-          }}
-          className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6 border cursor-pointer active:scale-[0.99] transition"
-        >
-          <img
-            src={colombiaFlorece}
-            alt="Colombia Florece"
-            className="w-full h-52 object-cover"
-          />
+      <div
+        onClick={() => {
+          setSelectedEventDetail(firstEvent)
+          setActiveTab("eventDetail")
+        }}
+        className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6 border cursor-pointer active:scale-[0.99] transition"
+      >
+        <img
+          src={firstEvent.image_url || colombiaFlorece}
+          alt={firstEvent.title || "Colombia Florece"}
+          className="w-full h-52 object-cover"
+        />
 
-          <div className="p-4">
-            <h3 className="font-bold text-2xl text-slate-950">
-              Colombia Florece
-            </h3>
+        <div className="p-4">
+          <h3 className="font-bold text-2xl text-slate-950">
+            {firstEvent.title || "Colombia Florece"}
+          </h3>
 
-            <p className="text-sm text-gray-600 mt-2">
-              {t.eventDateLine}
-            </p>
+          <p className="text-sm text-gray-600 mt-2">
+            Saturday 11 July 2026 · 4 PM - 10 PM
+          </p>
 
-            <p className="text-sm mt-2 text-gray-700">
-              👥 {t.colantCommunity}
-            </p>
+          <p className="text-sm mt-2 text-gray-700">
+            📍 Darwin Waterfront
+          </p>
 
-            <div className="mt-4">
-              <EventCountdown language={language} />
-            </div>
+          <p className="text-sm mt-2 text-gray-700">
+            👥 {t.colantCommunity}
+          </p>
 
-            <div className="mt-4 bg-blue-700 text-white w-full py-3 rounded-xl font-bold text-center">
-              {t.viewEventDetails}
-            </div>
+          <div className="mt-4">
+            <EventCountdown language={language} />
+          </div>
+
+          <div className="mt-4 bg-blue-700 text-white w-full py-3 rounded-xl font-bold text-center">
+            {t.viewEventDetails}
           </div>
         </div>
-      )}
+      </div>
 
       <AboutColant />
     </>
