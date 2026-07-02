@@ -5,7 +5,7 @@ import Users from "./admin/Users";
 import EventsAdmin from "./admin/EventsAdmin";
 import GalleryAdmin from "./admin/GalleryAdmin";
 import NotificationsAdmin from "./admin/NotificationsAdmin";
-import StatisticsAdmin from "./admin/StatisticsAdmin";
+import StatisticsAdmin from "./admin/Statistics";
 import SettingsAdmin from "./admin/SettingsAdmin";
 
 function AdminDashboard({
@@ -36,10 +36,15 @@ function AdminDashboard({
       )}
 
       {adminSection === "users" && <Users />}
+
       {adminSection === "events" && <EventsAdmin />}
+
       {adminSection === "gallery" && <GalleryAdmin />}
+
       {adminSection === "notifications" && <NotificationsAdmin />}
+
       {adminSection === "statistics" && <StatisticsAdmin />}
+
       {adminSection === "settings" && <SettingsAdmin />}
     </div>
   );
