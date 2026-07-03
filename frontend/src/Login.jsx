@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "./config";
 import backgroundImage from "./assets/Colant.png";
+import { requestNotificationPermission } from "./firebase";
 
 function Login({ onRegisterClick }) {
   const [email, setEmail] = useState("");
@@ -46,6 +47,30 @@ function Login({ onRegisterClick }) {
 
   const t = texts[language];
 
+  const saveFcmToken = async (jwtToken) => {
+    try {
+      const fcmToken = await requestNotificationPermission();
+
+      if (!fcmToken) {
+        return;
+      }
+
+      await axios.post(
+        `${API_URL}/auth/save-fcm-token`,
+        {
+          fcm_token: fcmToken,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error saving FCM token:", error.response?.data || error);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -54,27 +79,25 @@ function Login({ onRegisterClick }) {
       formData.append("username", email.trim().toLowerCase());
       formData.append("password", password.trim());
 
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/auth/login`, formData, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
-      localStorage.setItem("token", response.data.access_token);
+      const jwtToken = response.data.access_token;
+
+      localStorage.setItem("token", jwtToken);
       localStorage.setItem("email", response.data.email);
       localStorage.setItem("language", language);
+
+      await saveFcmToken(jwtToken);
 
       alert(t.success);
       window.location.reload();
     } catch (error) {
       console.error(error.response?.data || error);
-      alert(
-        error.response?.data?.detail || t.error
-      );
+      alert(error.response?.data?.detail || t.error);
     }
   };
 
@@ -87,20 +110,15 @@ function Login({ onRegisterClick }) {
     }
 
     try {
-      const response = await axios.post(
-        `${API_URL}/auth/forgot-password`,
-        {
-          email: email.trim().toLowerCase(),
-        }
-      );
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, {
+        email: email.trim().toLowerCase(),
+      });
 
       alert(response.data.message || t.resetSuccess);
       setForgotMode(false);
     } catch (error) {
       console.error(error.response?.data || error);
-      alert(
-        error.response?.data?.detail || t.resetError
-      );
+      alert(error.response?.data?.detail || t.resetError);
     }
   };
 
@@ -146,9 +164,7 @@ function Login({ onRegisterClick }) {
             {t.title}
           </h1>
 
-          <p className="text-blue-900 mt-2">
-            {t.subtitle}
-          </p>
+          <p className="text-blue-900 mt-2">{t.subtitle}</p>
         </div>
 
         {!forgotMode ? (
@@ -214,9 +230,7 @@ function Login({ onRegisterClick }) {
           </form>
         )}
 
-        <p className="text-center text-blue-950 mt-8">
-          {t.noAccount}
-        </p>
+        <p className="text-center text-blue-950 mt-8">{t.noAccount}</p>
 
         <button
           type="button"
