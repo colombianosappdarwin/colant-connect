@@ -5,6 +5,7 @@ import { API_URL } from "./config"
 import Register from "./Register"
 import Login from "./Login"
 import VerifyEmail from "./pages/VerifyEmail"
+import ResetPassword from "./pages/ResetPassword"
 
 import EventDetail from "./EventDetail"
 import EventMap from "./EventMap"
@@ -114,6 +115,10 @@ function App() {
   }
 
   if (!userProfile) {
+    if (window.location.pathname === "/reset-password") {
+      return <ResetPassword onLoginClick={() => setAuthMode("login")} />
+    }
+
     if (authMode === "verifyEmail") {
       return (
         <VerifyEmail

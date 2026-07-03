@@ -1,38 +1,52 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_URL } from "../config";
 
-function VerifyEmail() {
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+function ResetPassword({ onLoginClick }) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API_URL = "https://colant-connect-production.up.railway.app";
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
 
-  const handleVerify = async (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
 
-    if (!email || !code) {
-      alert("Please enter your email and verification code.");
+    if (!token) {
+      alert("Invalid or missing reset token.");
+      return;
+    }
+
+    if (!newPassword || !confirmPassword) {
+      alert("Please enter and confirm your new password.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert("Passwords do not match.");
       return;
     }
 
     try {
       setLoading(true);
 
-      await axios.post(`${API_URL}/auth/verify-email`, {
-        email: email,
-        code: code,
+      await axios.post(`${API_URL}/auth/reset-password`, {
+        token: token,
+        new_password: newPassword,
       });
 
-      alert("Email verified successfully. You can now log in.");
+      alert("Password updated successfully. You can now log in.");
 
-      window.location.href = "/";
+      if (onLoginClick) {
+        onLoginClick();
+      }
     } catch (error) {
       console.error(error);
 
       alert(
         error.response?.data?.detail ||
-          "Error verifying email. Please try again."
+          "Error updating password. Please try again."
       );
     } finally {
       setLoading(false);
@@ -43,40 +57,39 @@ function VerifyEmail() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8">
         <h1 className="text-3xl font-extrabold text-blue-950 text-center">
-          Verify your email
+          Reset Password
         </h1>
 
         <p className="text-slate-600 text-center mt-3">
-          Enter the verification code sent to your email.
+          Create a new password for your COLANT Connect account.
         </p>
 
-        <form onSubmit={handleVerify} className="mt-8 space-y-5">
+        <form onSubmit={handleResetPassword} className="mt-8 space-y-5">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Email
+              New password
             </label>
 
             <input
-              type="email"
-              placeholder="your@email.com"
+              type="password"
+              placeholder="New password"
               className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
             />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Verification code
+              Confirm password
             </label>
 
             <input
-              type="text"
-              placeholder="123456"
-              maxLength="6"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700 text-center text-xl tracking-widest"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
+              type="password"
+              placeholder="Confirm password"
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 
@@ -85,12 +98,12 @@ function VerifyEmail() {
             disabled={loading}
             className="w-full bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 rounded-xl transition disabled:opacity-60"
           >
-            {loading ? "Verifying..." : "Verify Email"}
+            {loading ? "Saving..." : "Save New Password"}
           </button>
         </form>
 
         <button
-          onClick={() => (window.location.href = "/")}
+          onClick={onLoginClick}
           className="w-full mt-5 text-blue-800 font-semibold hover:underline"
         >
           Back to login
@@ -100,4 +113,4 @@ function VerifyEmail() {
   );
 }
 
-export default VerifyEmail;
+export default ResetPassword;
