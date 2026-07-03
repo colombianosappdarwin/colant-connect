@@ -1,12 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
+import { API_URL } from "../config";
 
-function VerifyEmail() {
-  const [email, setEmail] = useState("");
+function VerifyEmail({ initialEmail = "", onLoginClick }) {
+  const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const API_URL = "https://colant-connect-production.up.railway.app";
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -26,7 +25,9 @@ function VerifyEmail() {
 
       alert("Email verified successfully. You can now log in.");
 
-      window.location.href = "/";
+      if (onLoginClick) {
+        onLoginClick();
+      }
     } catch (error) {
       console.error(error);
 
@@ -90,7 +91,7 @@ function VerifyEmail() {
         </form>
 
         <button
-          onClick={() => (window.location.href = "/")}
+          onClick={onLoginClick}
           className="w-full mt-5 text-blue-800 font-semibold hover:underline"
         >
           Back to login

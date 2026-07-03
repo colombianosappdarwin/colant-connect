@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { API_URL } from "./config"
+
 import Register from "./Register"
 import Login from "./Login"
+import VerifyEmail from "./pages/VerifyEmail"
+
 import EventDetail from "./EventDetail"
 import EventMap from "./EventMap"
 import Home from "./pages/Home"
@@ -20,7 +23,10 @@ function App() {
   const [businesses, setBusinesses] = useState([])
   const [gallery, setGallery] = useState([])
   const [userProfile, setUserProfile] = useState(null)
+
   const [authMode, setAuthMode] = useState("login")
+  const [verificationEmail, setVerificationEmail] = useState("")
+
   const [activeTab, setActiveTab] = useState("home")
   const [selectedEventDetail, setSelectedEventDetail] = useState(null)
   const [language, setLanguage] = useState("es")
@@ -108,11 +114,28 @@ function App() {
   }
 
   if (!userProfile) {
-    return authMode === "login" ? (
-      <Login onRegisterClick={() => setAuthMode("register")} />
-    ) : (
-      <Register onLoginClick={() => setAuthMode("login")} />
-    )
+    if (authMode === "verifyEmail") {
+      return (
+        <VerifyEmail
+          initialEmail={verificationEmail}
+          onLoginClick={() => setAuthMode("login")}
+        />
+      )
+    }
+
+    if (authMode === "register") {
+      return (
+        <Register
+          onLoginClick={() => setAuthMode("login")}
+          onRegisterSuccess={(email) => {
+            setVerificationEmail(email)
+            setAuthMode("verifyEmail")
+          }}
+        />
+      )
+    }
+
+    return <Login onRegisterClick={() => setAuthMode("register")} />
   }
 
   return (
