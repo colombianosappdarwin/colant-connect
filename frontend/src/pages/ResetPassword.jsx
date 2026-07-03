@@ -32,8 +32,8 @@ function ResetPassword({ onLoginClick }) {
       setLoading(true);
 
       await axios.post(`${API_URL}/auth/reset-password`, {
-        token: token,
-        new_password: newPassword,
+      token,
+      new_password: newPassword.trim(),
       });
 
       alert("Password updated successfully. You can now log in.");
