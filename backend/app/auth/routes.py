@@ -250,7 +250,7 @@ def forgot_password(request: ForgotPasswordRequest):
     reset_token = create_password_reset_token(user.email)
 
     reset_url = (
-        "https://colant-connect-production.up.railway.app"
+        "https://cooperative-acceptance-production-1b19.up.railway.app"
         f"/reset-password?token={reset_token}"
     )
 
