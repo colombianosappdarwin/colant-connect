@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
+from uuid import UUID
 
 from app.database.database import get_db
 from app.models.notification import Notification
@@ -16,7 +17,7 @@ class NotificationCreate(BaseModel):
     title: str
     message: str
     type: str = "general"
-    related_event_id: Optional[int] = None
+    related_event_id: Optional[UUID] = None
     is_active: bool = True
 
 
@@ -48,7 +49,7 @@ def get_notifications(db: Session = Depends(get_db)):
 
 @router.put("/{notification_id}")
 def update_notification(
-    notification_id: int,
+    notification_id: UUID,
     data: NotificationCreate,
     db: Session = Depends(get_db)
 ):
@@ -72,7 +73,7 @@ def update_notification(
 
 
 @router.delete("/{notification_id}")
-def delete_notification(notification_id: int, db: Session = Depends(get_db)):
+def delete_notification(notification_id: UUID, db: Session = Depends(get_db)):
     notification = db.query(Notification).filter(
         Notification.id == notification_id
     ).first()
