@@ -17,7 +17,14 @@ def create_user(db: Session, user_data: dict):
         visa_type=user_data["visa_type"],
         arrival_date=user_data["arrival_date"],
         preferred_language=user_data["preferred_language"],
-        profile_photo_url=user_data["profile_photo_url"]
+        profile_photo_url=user_data["profile_photo_url"],
+
+        # Security
+        role=user_data.get("role", "user"),
+        is_active=user_data.get("is_active", True),
+        email_verified=user_data.get("email_verified", False),
+        verification_code=user_data.get("verification_code"),
+        verification_code_expires=user_data.get("verification_code_expires")
     )
 
     db.add(user)
