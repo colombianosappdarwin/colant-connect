@@ -5,6 +5,7 @@ from app.database.database import Base, engine
 
 from app.models.user_model import User
 from app.models.event import Event
+from app.models.notification import Notification
 from app.gallery.gallery import Gallery
 from app.businesses.business_model import Business
 
@@ -13,6 +14,7 @@ from app.events.routes import router as events_router
 from app.gallery.routes import router as gallery_router
 from app.businesses.routes import router as businesses_router
 from app.admin.admin_router import router as admin_router
+from app.notifications.routes import router as notifications_router
 
 app = FastAPI(
     title="COLANT Connect API",
@@ -34,6 +36,7 @@ app.include_router(events_router, prefix="/events")
 app.include_router(gallery_router, prefix="/gallery")
 app.include_router(businesses_router, prefix="/businesses")
 app.include_router(admin_router)
+app.include_router(notifications_router)
 
 
 @app.get("/")
