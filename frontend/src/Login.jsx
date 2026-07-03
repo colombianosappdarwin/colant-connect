@@ -51,14 +51,18 @@ function Login({ onRegisterClick }) {
 
     try {
       const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
+      formData.append("username", email.trim().toLowerCase());
+      formData.append("password", password.trim());
 
-      const response = await axios.post(`${API_URL}/auth/login`, formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/login`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("email", response.data.email);
@@ -67,27 +71,36 @@ function Login({ onRegisterClick }) {
       alert(t.success);
       window.location.reload();
     } catch (error) {
-      alert(t.error);
+      console.error(error.response?.data || error);
+      alert(
+        error.response?.data?.detail || t.error
+      );
     }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
 
-    if (!email) {
+    if (!email.trim()) {
       alert(t.email);
       return;
     }
 
     try {
-      const response = await axios.post(`${API_URL}/auth/forgot-password`, {
-        email,
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/forgot-password`,
+        {
+          email: email.trim().toLowerCase(),
+        }
+      );
 
       alert(response.data.message || t.resetSuccess);
       setForgotMode(false);
     } catch (error) {
-      alert(t.resetError);
+      console.error(error.response?.data || error);
+      alert(
+        error.response?.data?.detail || t.resetError
+      );
     }
   };
 
@@ -146,6 +159,7 @@ function Login({ onRegisterClick }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
+              required
             />
 
             <input
@@ -154,6 +168,7 @@ function Login({ onRegisterClick }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
+              required
             />
 
             <button
@@ -179,6 +194,7 @@ function Login({ onRegisterClick }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-4 rounded-2xl bg-white text-black border border-slate-300 outline-none"
+              required
             />
 
             <button
