@@ -14,7 +14,7 @@ from app.auth.email_service import (
 )
 from app.core.security import verify_token
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import random
 
 router = APIRouter()
@@ -75,7 +75,7 @@ def register(user: UserRegister):
     hashed_password = hash_password(user.password)
 
     verification_code = str(random.randint(100000, 999999))
-    verification_expires = datetime.utcnow() + timedelta(minutes=10)
+    verification_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
 
     user_data = {
         "full_name": user.full_name,
@@ -146,7 +146,10 @@ def verify_email(request: VerifyEmailRequest):
             detail="Invalid verification code"
         )
 
-    if user.verification_code_expires < datetime.utcnow():
+    if (
+        user.verification_code_expires
+        and user.verification_code_expires < datetime.now(timezone.utc)
+    ):
         db.close()
         raise HTTPException(
             status_code=400,
@@ -205,7 +208,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Invalid password"
         )
 
-    db_user.last_login = datetime.utcnow()
+    db_user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     token = create_access_token(
