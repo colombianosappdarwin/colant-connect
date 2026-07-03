@@ -6,7 +6,7 @@ def create_user(db: Session, user_data: dict):
 
     user = User(
         full_name=user_data["full_name"],
-        email=user_data["email"],
+        email=user_data["email"].strip().lower(),
         password_hash=user_data["password_hash"],
         gender=user_data["gender"],
         phone=user_data["phone"],
@@ -19,7 +19,6 @@ def create_user(db: Session, user_data: dict):
         preferred_language=user_data["preferred_language"],
         profile_photo_url=user_data["profile_photo_url"],
 
-        # Security
         role=user_data.get("role", "user"),
         is_active=user_data.get("is_active", True),
         email_verified=user_data.get("email_verified", False),
@@ -36,6 +35,8 @@ def create_user(db: Session, user_data: dict):
 
 def get_user_by_email(db: Session, email: str):
 
+    clean_email = email.strip().lower()
+
     return db.query(User).filter(
-        User.email == email
+        User.email == clean_email
     ).first()

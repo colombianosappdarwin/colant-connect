@@ -55,22 +55,25 @@ class VerifyEmailRequest(BaseModel):
     code: str
 
 
+class FCMTokenRequest(BaseModel):
+    fcm_token: str
+
+
 def hash_password(password: str):
-    return pwd_context.hash(password)
+    return pwd_context.hash(password.strip())
 
 
 @router.post("/register")
 def register(user: UserRegister):
     db = SessionLocal()
 
-    existing_user = get_user_by_email(db, user.email)
+    clean_email = user.email.strip().lower()
+
+    existing_user = get_user_by_email(db, clean_email)
 
     if existing_user:
         db.close()
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = hash_password(user.password)
 
@@ -79,7 +82,7 @@ def register(user: UserRegister):
 
     user_data = {
         "full_name": user.full_name,
-        "email": user.email,
+        "email": clean_email,
         "password_hash": hashed_password,
         "gender": user.gender,
         "phone": user.phone,
@@ -121,40 +124,26 @@ def verify_email(request: VerifyEmailRequest):
 
     if not user:
         db.close()
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail="User not found")
 
     if user.email_verified:
         db.close()
-        return {
-            "message": "Email already verified"
-        }
+        return {"message": "Email already verified"}
 
     if not user.verification_code:
         db.close()
-        raise HTTPException(
-            status_code=400,
-            detail="No verification code found"
-        )
+        raise HTTPException(status_code=400, detail="No verification code found")
 
     if user.verification_code != request.code:
         db.close()
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid verification code"
-        )
+        raise HTTPException(status_code=400, detail="Invalid verification code")
 
     if (
         user.verification_code_expires
         and user.verification_code_expires < datetime.now(timezone.utc)
     ):
         db.close()
-        raise HTTPException(
-            status_code=400,
-            detail="Verification code expired"
-        )
+        raise HTTPException(status_code=400, detail="Verification code expired")
 
     user.email_verified = True
     user.verification_code = None
@@ -163,33 +152,25 @@ def verify_email(request: VerifyEmailRequest):
     db.commit()
     db.close()
 
-    return {
-        "message": "Email verified successfully"
-    }
+    return {"message": "Email verified successfully"}
 
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     db = SessionLocal()
 
-    db_user = get_user_by_email(
-        db,
-        form_data.username
-    )
+    clean_email = form_data.username.strip().lower()
+    clean_password = form_data.password.strip()
+
+    db_user = get_user_by_email(db, clean_email)
 
     if not db_user:
         db.close()
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid email"
-        )
+        raise HTTPException(status_code=401, detail="Invalid email")
 
     if not db_user.is_active:
         db.close()
-        raise HTTPException(
-            status_code=403,
-            detail="User account is blocked"
-        )
+        raise HTTPException(status_code=403, detail="User account is blocked")
 
     if not db_user.email_verified:
         db.close()
@@ -198,24 +179,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Please verify your email before logging in."
         )
 
-    if not pwd_context.verify(
-        form_data.password,
-        db_user.password_hash
-    ):
+    if not pwd_context.verify(clean_password, db_user.password_hash):
         db.close()
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid password"
-        )
+        raise HTTPException(status_code=401, detail="Invalid password")
 
     db_user.last_login = datetime.now(timezone.utc)
     db.commit()
 
-    token = create_access_token(
-        data={
-            "sub": db_user.email
-        }
-    )
+    token = create_access_token(data={"sub": db_user.email})
 
     email = db_user.email
     role = db_user.role
@@ -234,7 +205,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 def forgot_password(request: ForgotPasswordRequest):
     db = SessionLocal()
 
-    user = get_user_by_email(db, request.email)
+    clean_email = request.email.strip().lower()
+    user = get_user_by_email(db, clean_email)
 
     if not user:
         db.close()
@@ -245,10 +217,7 @@ def forgot_password(request: ForgotPasswordRequest):
 
     if not user.is_active:
         db.close()
-        raise HTTPException(
-            status_code=403,
-            detail="User account is blocked"
-        )
+        raise HTTPException(status_code=403, detail="User account is blocked")
 
     reset_token = create_password_reset_token(user.email)
 
@@ -264,9 +233,7 @@ def forgot_password(request: ForgotPasswordRequest):
 
     db.close()
 
-    return {
-        "message": "Password reset email sent successfully"
-    }
+    return {"message": "Password reset email sent successfully"}
 
 
 @router.post("/reset-password")
@@ -285,30 +252,33 @@ def reset_password(request: ResetPasswordRequest):
 
     if not user:
         db.close()
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail="User not found")
 
     if not user.is_active:
         db.close()
-        raise HTTPException(
-            status_code=403,
-            detail="User account is blocked"
-        )
+        raise HTTPException(status_code=403, detail="User account is blocked")
 
-    user.password_hash = hash_password(request.new_password)
+    clean_password = request.new_password.strip()
+
+    user.password_hash = hash_password(clean_password)
     db.commit()
+    db.refresh(user)
+
+    if not pwd_context.verify(clean_password, user.password_hash):
+        db.close()
+        raise HTTPException(
+            status_code=500,
+            detail="Password was not saved correctly"
+        )
 
     db.close()
 
-    return {
-        "message": "Password updated successfully"
-    }
+    return {"message": "Password updated successfully"}
 
 
-@router.get("/me")
-def get_me(
+@router.post("/save-fcm-token")
+def save_fcm_token(
+    request: FCMTokenRequest,
     email: str = Depends(verify_token)
 ):
     db = SessionLocal()
@@ -317,17 +287,31 @@ def get_me(
 
     if not user:
         db.close()
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.fcm_token = request.fcm_token
+
+    db.commit()
+    db.close()
+
+    return {
+        "message": "FCM token saved successfully"
+    }
+
+
+@router.get("/me")
+def get_me(email: str = Depends(verify_token)):
+    db = SessionLocal()
+
+    user = get_user_by_email(db, email)
+
+    if not user:
+        db.close()
+        raise HTTPException(status_code=404, detail="User not found")
 
     if not user.is_active:
         db.close()
-        raise HTTPException(
-            status_code=403,
-            detail="User account is blocked"
-        )
+        raise HTTPException(status_code=403, detail="User account is blocked")
 
     result = {
         "id": str(user.id),
@@ -347,7 +331,8 @@ def get_me(
         "is_active": user.is_active,
         "email_verified": user.email_verified,
         "last_login": user.last_login,
-        "created_at": user.created_at
+        "created_at": user.created_at,
+        "fcm_token": user.fcm_token
     }
 
     db.close()

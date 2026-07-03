@@ -95,6 +95,9 @@ class User(Base):
         default=False
     )
 
+    # Firebase Cloud Messaging Token
+    fcm_token = Column(String)
+
     # =============================
     # AUDIT
     # =============================
