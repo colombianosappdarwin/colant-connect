@@ -13,6 +13,7 @@ import Home from "./pages/Home"
 import Profile from "./pages/Profile"
 import Events from "./pages/Events"
 import Gallery from "./pages/Gallery"
+import Notifications from "./pages/Notifications"
 import AdminDashboard from "./pages/AdminDashboard"
 import BottomNavigation from "./components/BottomNavigation"
 import { texts } from "./translations"
@@ -166,6 +167,16 @@ function App() {
                 {language === "es" ? "🇺🇸 English" : "🇨🇴 Español"}
               </button>
 
+              <button
+                onClick={() => setActiveTab("notifications")}
+                className="relative text-3xl"
+              >
+                🔔
+                <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full px-1.5">
+                  !
+                </span>
+              </button>
+
               <div className="text-3xl">🇨🇴🇦🇺</div>
             </div>
           </div>
@@ -216,6 +227,13 @@ function App() {
               galleryByEvent={galleryByEvent}
               loadGallery={loadGallery}
               language={language}
+            />
+          )}
+
+          {activeTab === "notifications" && (
+            <Notifications
+              language={language}
+              setActiveTab={setActiveTab}
             />
           )}
 

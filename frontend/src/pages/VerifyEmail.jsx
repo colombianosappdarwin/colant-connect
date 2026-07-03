@@ -18,15 +18,22 @@ function VerifyEmail({ initialEmail = "", onLoginClick }) {
     try {
       setLoading(true);
 
-      await axios.post(`${API_URL}/auth/verify-email`, {
-        email: email,
-        code: code,
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/verify-email`,
+        {
+          email,
+          code,
+        }
+      );
 
-      alert("Email verified successfully. You can now log in.");
+      alert(response.data.message);
+
+      setCode("");
 
       if (onLoginClick) {
         onLoginClick();
+      } else {
+        window.location.reload();
       }
     } catch (error) {
       console.error(error);
@@ -43,6 +50,7 @@ function VerifyEmail({ initialEmail = "", onLoginClick }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8">
+
         <h1 className="text-3xl font-extrabold text-blue-950 text-center">
           Verify your email
         </h1>
@@ -52,6 +60,7 @@ function VerifyEmail({ initialEmail = "", onLoginClick }) {
         </p>
 
         <form onSubmit={handleVerify} className="mt-8 space-y-5">
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Email
@@ -59,10 +68,11 @@ function VerifyEmail({ initialEmail = "", onLoginClick }) {
 
             <input
               type="email"
-              placeholder="your@email.com"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700"
+              required
             />
           </div>
 
@@ -73,11 +83,12 @@ function VerifyEmail({ initialEmail = "", onLoginClick }) {
 
             <input
               type="text"
-              placeholder="123456"
-              maxLength="6"
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700 text-center text-xl tracking-widest"
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              maxLength={6}
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-700 text-center text-xl tracking-widest"
+              required
             />
           </div>
 
@@ -88,14 +99,23 @@ function VerifyEmail({ initialEmail = "", onLoginClick }) {
           >
             {loading ? "Verifying..." : "Verify Email"}
           </button>
+
         </form>
 
         <button
-          onClick={onLoginClick}
+          type="button"
+          onClick={() => {
+            if (onLoginClick) {
+              onLoginClick();
+            } else {
+              window.location.reload();
+            }
+          }}
           className="w-full mt-5 text-blue-800 font-semibold hover:underline"
         >
           Back to login
         </button>
+
       </div>
     </div>
   );
