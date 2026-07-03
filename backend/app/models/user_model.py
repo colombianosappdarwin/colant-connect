@@ -86,6 +86,10 @@ class User(Base):
         default=False
     )
 
+    verification_code = Column(String)
+
+    verification_code_expires = Column(DateTime)
+
     two_factor_enabled = Column(
         Boolean,
         default=False

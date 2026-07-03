@@ -2,17 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from app.database.database import SessionLocal
-from app.auth.service import create_user
-from app.auth.service import get_user_by_email
+from app.auth.service import create_user, get_user_by_email
 from app.auth.jwt_handler import (
     create_access_token,
     create_password_reset_token,
     verify_password_reset_token
 )
-from app.auth.email_service import send_password_reset_email
+from app.auth.email_service import (
+    send_password_reset_email,
+    send_verification_code_email
+)
 from app.core.security import verify_token
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import random
 
 router = APIRouter()
 
@@ -47,6 +50,11 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+
 def hash_password(password: str):
     return pwd_context.hash(password)
 
@@ -66,6 +74,9 @@ def register(user: UserRegister):
 
     hashed_password = hash_password(user.password)
 
+    verification_code = str(random.randint(100000, 999999))
+    verification_expires = datetime.utcnow() + timedelta(minutes=10)
+
     user_data = {
         "full_name": user.full_name,
         "email": user.email,
@@ -79,16 +90,78 @@ def register(user: UserRegister):
         "visa_type": user.visa_type,
         "arrival_date": user.arrival_date,
         "preferred_language": user.preferred_language,
-        "profile_photo_url": user.profile_photo_url
+        "profile_photo_url": user.profile_photo_url,
+        "email_verified": False,
+        "verification_code": verification_code,
+        "verification_code_expires": verification_expires
     }
 
     new_user = create_user(db, user_data)
+
+    send_verification_code_email(
+        to_email=new_user.email,
+        code=verification_code
+    )
+
     db.close()
 
     return {
-        "message": "User registered successfully",
+        "message": "User registered successfully. Verification code sent.",
         "user_id": str(new_user.id),
-        "email": new_user.email
+        "email": new_user.email,
+        "email_verified": new_user.email_verified
+    }
+
+
+@router.post("/verify-email")
+def verify_email(request: VerifyEmailRequest):
+    db = SessionLocal()
+
+    user = get_user_by_email(db, request.email)
+
+    if not user:
+        db.close()
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    if user.email_verified:
+        db.close()
+        return {
+            "message": "Email already verified"
+        }
+
+    if not user.verification_code:
+        db.close()
+        raise HTTPException(
+            status_code=400,
+            detail="No verification code found"
+        )
+
+    if user.verification_code != request.code:
+        db.close()
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid verification code"
+        )
+
+    if user.verification_code_expires < datetime.utcnow():
+        db.close()
+        raise HTTPException(
+            status_code=400,
+            detail="Verification code expired"
+        )
+
+    user.email_verified = True
+    user.verification_code = None
+    user.verification_code_expires = None
+
+    db.commit()
+    db.close()
+
+    return {
+        "message": "Email verified successfully"
     }
 
 
@@ -113,6 +186,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(
             status_code=403,
             detail="User account is blocked"
+        )
+
+    if not db_user.email_verified:
+        db.close()
+        raise HTTPException(
+            status_code=403,
+            detail="Please verify your email before logging in."
         )
 
     if not pwd_context.verify(
@@ -155,9 +235,10 @@ def forgot_password(request: ForgotPasswordRequest):
 
     if not user:
         db.close()
-        return {
-            "message": "If this email exists, a password reset link will be sent."
-        }
+        raise HTTPException(
+            status_code=404,
+            detail="No account found with this email"
+        )
 
     if not user.is_active:
         db.close()
