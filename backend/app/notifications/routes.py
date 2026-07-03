@@ -6,6 +6,8 @@ from uuid import UUID
 
 from app.database.database import get_db
 from app.models.notification import Notification
+from app.models.user_model import User
+from app.notifications.firebase_push import send_push_notification
 
 router = APIRouter(
     prefix="/notifications",
@@ -35,7 +37,27 @@ def create_notification(data: NotificationCreate, db: Session = Depends(get_db))
     db.commit()
     db.refresh(notification)
 
-    return notification
+    users = db.query(User).filter(
+        User.fcm_token.isnot(None)
+    ).all()
+
+    sent_count = 0
+
+    for user in users:
+        try:
+            send_push_notification(
+                token=user.fcm_token,
+                title=data.title,
+                message=data.message
+            )
+            sent_count += 1
+        except Exception as error:
+            print("Error sending push:", error)
+
+    return {
+        "notification": notification,
+        "push_sent": sent_count
+    }
 
 
 @router.get("/")
