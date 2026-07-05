@@ -42,12 +42,19 @@ function ImageViewer({
   return (
     <div
       className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose()
+        }
+      }}
     >
       <button
         type="button"
-        onClick={onClose}
-        className="absolute top-5 right-5 text-white text-5xl font-light hover:text-gray-300 transition z-20"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
+        className="absolute top-6 right-6 w-14 h-14 rounded-full bg-black/70 text-white text-4xl flex items-center justify-center hover:bg-black/90 transition z-50"
       >
         ×
       </button>
@@ -58,7 +65,7 @@ function ImageViewer({
           e.stopPropagation()
           onPrev()
         }}
-        className="absolute left-4 md:left-8 text-white text-5xl md:text-6xl font-light hover:scale-110 transition z-20"
+        className="absolute left-4 md:left-8 text-white text-5xl md:text-6xl font-light hover:scale-110 transition z-40"
       >
         ‹
       </button>
@@ -69,7 +76,7 @@ function ImageViewer({
           e.stopPropagation()
           onNext()
         }}
-        className="absolute right-4 md:right-8 text-white text-5xl md:text-6xl font-light hover:scale-110 transition z-20"
+        className="absolute right-4 md:right-8 text-white text-5xl md:text-6xl font-light hover:scale-110 transition z-40"
       >
         ›
       </button>
@@ -86,7 +93,7 @@ function ImageViewer({
           className="max-h-[85vh] max-w-[92vw] rounded-2xl shadow-2xl object-contain"
         />
 
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm font-bold">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-bold">
           {currentIndex + 1} / {images.length}
         </div>
       </div>
