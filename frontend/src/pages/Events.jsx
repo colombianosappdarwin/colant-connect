@@ -67,8 +67,24 @@ function Events({
                   <p>👥 Comunidad COLANT</p>
                 </div>
 
-                <div className="mt-5 bg-blue-700 text-white w-full py-3 rounded-2xl font-bold shadow-md text-center">
-                  Event Details
+                <div className="mt-6">
+                  <div className="flex items-center justify-between text-sm text-slate-600 mb-4">
+                    <span>👥 183 attending</span>
+
+                    <button
+                      type="button"
+                      className="text-blue-700 hover:text-blue-900 font-semibold"
+                    >
+                      📍 Open in Maps
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="w-full bg-blue-700 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                  >
+                    ✅ Attend Event
+                  </button>
                 </div>
 
                 {eventBusinesses.length > 0 && (
