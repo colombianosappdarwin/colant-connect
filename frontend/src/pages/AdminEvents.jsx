@@ -12,11 +12,14 @@ function AdminEvents({ token }) {
   const [loading, setLoading] = useState(true);
 
   const loadEvents = async () => {
+    setLoading(true);
+
     try {
       const response = await axios.get(`${API_URL}/events/`);
       setEvents(response.data);
     } catch (error) {
-      console.log(error);
+      console.log("Error loading events:", error);
+      alert("Error loading events");
     } finally {
       setLoading(false);
     }
@@ -27,13 +30,18 @@ function AdminEvents({ token }) {
   }, []);
 
   const createEvent = async () => {
+    if (!title || !description || !location || !eventDate) {
+      alert("Please complete all fields");
+      return;
+    }
+
     try {
       await axios.post(
         `${API_URL}/events/`,
         {
-          title,
-          description,
-          location,
+          title: title,
+          description: description,
+          location: location,
           event_date: eventDate,
         },
         {
@@ -51,9 +59,8 @@ function AdminEvents({ token }) {
       setEventDate("");
 
       loadEvents();
-
     } catch (error) {
-      console.log(error);
+      console.log("Error creating event:", error);
       alert("Error creating event");
     }
   };
@@ -62,23 +69,22 @@ function AdminEvents({ token }) {
     if (!window.confirm("Delete this event?")) return;
 
     try {
-      await axios.delete(`${API_URL}/events/${id}`, {
+      await axios.delete(`${API_URL}/events/${id}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      alert("Event deleted successfully");
       loadEvents();
-
     } catch (error) {
-      console.log(error);
+      console.log("Error deleting event:", error);
       alert("Error deleting event");
     }
   };
 
   return (
     <div className="bg-white rounded-3xl shadow-lg p-6 mt-5">
-
       <h2 className="text-2xl font-extrabold text-blue-950 mb-6">
         Manage Events
       </h2>
@@ -128,9 +134,7 @@ function AdminEvents({ token }) {
       {loading ? (
         <p>Loading...</p>
       ) : events.length === 0 ? (
-        <p className="text-gray-500">
-          No events available.
-        </p>
+        <p className="text-gray-500">No events available.</p>
       ) : (
         events.map((event) => (
           <div
@@ -138,13 +142,15 @@ function AdminEvents({ token }) {
             className="border rounded-2xl p-4 mb-3 flex justify-between items-center"
           >
             <div>
-              <h4 className="font-bold text-lg">
-                {event.title}
-              </h4>
+              <h4 className="font-bold text-lg">{event.title}</h4>
 
-              <p className="text-gray-600 text-sm">
-                {event.location}
-              </p>
+              <p className="text-gray-600 text-sm">{event.location}</p>
+
+              {event.event_date && (
+                <p className="text-gray-500 text-sm">
+                  {new Date(event.event_date).toLocaleString()}
+                </p>
+              )}
             </div>
 
             <button
