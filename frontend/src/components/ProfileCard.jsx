@@ -2,23 +2,37 @@ function ProfileCard({
   userProfile,
   onEditProfile,
   onAdminClick,
-  onLogout
+  onLogout,
 }) {
   const isAdmin =
-    userProfile?.role === "admin" || userProfile?.role === "super_admin"
+    userProfile?.role === "admin" ||
+    userProfile?.role === "super_admin";
 
   return (
     <div className="bg-white min-h-[calc(100vh-110px)]">
+      {/* Header */}
       <div className="bg-slate-950 text-white px-6 pt-10 pb-24 rounded-b-[32px]">
-        <h2 className="text-3xl font-extrabold mb-8">Settings</h2>
+        <h2 className="text-3xl font-extrabold mb-8">
+          Settings
+        </h2>
 
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-5xl">
-            👤
+            {userProfile?.profile_photo_url ? (
+              <img
+                src={userProfile.profile_photo_url}
+                alt="Profile"
+                className="w-20 h-20 rounded-full object-cover"
+              />
+            ) : (
+              "👤"
+            )}
           </div>
 
           <div>
-            <p className="text-slate-300 text-sm">Welcome</p>
+            <p className="text-slate-300 text-sm">
+              Welcome
+            </p>
 
             <h3 className="text-xl font-bold">
               {userProfile?.full_name || "User"}
@@ -31,7 +45,10 @@ function ProfileCard({
         </div>
       </div>
 
+      {/* Cards */}
       <div className="-mt-12 mx-4 bg-white rounded-[28px] shadow-lg overflow-hidden border border-slate-100">
+
+        {/* Profile */}
         <button
           type="button"
           onClick={onEditProfile}
@@ -47,13 +64,16 @@ function ProfileCard({
             </span>
           </div>
 
-          <span className="text-2xl text-slate-400">›</span>
+          <span className="text-2xl text-slate-400">
+            ›
+          </span>
         </button>
 
+        {/* Admin */}
         {isAdmin && (
           <button
             type="button"
-            onClick={() => onAdminClick()}
+            onClick={onAdminClick}
             className="w-full flex items-center justify-between px-6 py-6 border-b border-slate-100"
           >
             <div className="flex items-center gap-4">
@@ -66,10 +86,13 @@ function ProfileCard({
               </span>
             </div>
 
-            <span className="text-2xl text-slate-400">›</span>
+            <span className="text-2xl text-slate-400">
+              ›
+            </span>
           </button>
         )}
 
+        {/* Logout */}
         <button
           type="button"
           onClick={onLogout}
@@ -85,11 +108,14 @@ function ProfileCard({
             </span>
           </div>
 
-          <span className="text-2xl text-slate-400">›</span>
+          <span className="text-2xl text-slate-400">
+            ›
+          </span>
         </button>
+
       </div>
     </div>
-  )
+  );
 }
 
-export default ProfileCard
+export default ProfileCard;

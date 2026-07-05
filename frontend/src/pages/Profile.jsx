@@ -23,7 +23,9 @@ function Profile({ userProfile, setUserProfile, logout, setActiveTab }) {
     <ProfileCard
       userProfile={userProfile}
       onEditProfile={() => setEditingProfile(true)}
-      onAdminPanel={() => setActiveTab("admin")}
+      onAdminClick={() => {
+        setActiveTab("admin")
+      }}
       onLogout={logout}
     />
   )
