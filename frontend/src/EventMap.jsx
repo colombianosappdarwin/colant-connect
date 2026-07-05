@@ -60,8 +60,8 @@ function EventMap({ language = "es" }) {
     C: {
       title: "Area C - Family Zone",
       subtitle: "La Plaza del Pueblo",
-      emoji: "🎪",
-      color: "bg-gradient-to-br from-blue-600 to-purple-600",
+      emoji: "👨‍👩‍👧",
+      color: "bg-gradient-to-br from-yellow-400 to-amber-500",
       image: AREA_IMAGES.C,
       modern: true,
       events:
@@ -172,7 +172,7 @@ function EventMap({ language = "es" }) {
 
                 <button
                   onClick={() => setSelectedArea("C")}
-                  className="absolute left-[28%] top-[42%] w-[18%] h-[22%] rounded-2xl bg-purple-500/20 border-2 border-purple-500"
+                  className="absolute left-[28%] top-[42%] w-[18%] h-[22%] rounded-2xl bg-yellow-400/20 border-2 border-yellow-400"
                   aria-label="Area C"
                 />
 
