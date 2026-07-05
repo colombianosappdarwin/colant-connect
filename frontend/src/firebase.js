@@ -6,7 +6,7 @@ import {
 } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB2IVeOBqnPMEtF0JMfuiEcCW0JMfuiEcCW0JFcMzs6g",
+  apiKey: "AIzaSyB2IVeOBqnPMEtF0JMfuiEcCW0JFcMzs6g",
   authDomain: "colant-connect.firebaseapp.com",
   projectId: "colant-connect",
   storageBucket: "colant-connect.firebasestorage.app",
@@ -18,27 +18,40 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export async function requestNotificationPermission() {
-  const supported = await isSupported();
+  try {
+    const supported = await isSupported();
 
-  if (!supported) {
-    console.log("Firebase Messaging no es compatible.");
+    if (!supported) {
+      console.log("Firebase Messaging no es compatible.");
+      return null;
+    }
+
+    const permission = await Notification.requestPermission();
+    console.log("Notification permission:", permission);
+
+    if (permission !== "granted") {
+      return null;
+    }
+
+    const registration = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js"
+    );
+
+    console.log("Service Worker registered:", registration);
+
+    const messaging = getMessaging(app);
+
+    const token = await getToken(messaging, {
+      vapidKey:
+        "BO5rLI7-_DTHo3_eWQ17jpppP0f9NKaItXx-WqJq8FS3GXbzsg8-asSmfBMgPY5_hQa0NOfTOeyk4oh3kPFMffM",
+      serviceWorkerRegistration: registration
+    });
+
+    console.log("FCM TOKEN:", token);
+
+    return token;
+  } catch (error) {
+    console.error("Firebase token error:", error);
     return null;
   }
-
-  const messaging = getMessaging(app);
-
-  const permission = await Notification.requestPermission();
-
-  if (permission !== "granted") {
-    return null;
-  }
-
-  const token = await getToken(messaging, {
-    vapidKey:
-      "BO5rLI7-_DTHo3_eWQ17jpppP0f9NKaItXx-WqJq8FS3GXbzsg8-asSmfBMgPY5_hQa0NOfTOeyk4oh3kPFMffM"
-  });
-
-  console.log("FCM TOKEN:", token);
-
-  return token;
 }
