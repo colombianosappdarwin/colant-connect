@@ -42,6 +42,17 @@ function App() {
     setLanguage(language === "es" ? "en" : "es")
   }
 
+  const whatsappNumber = "+61405376310"
+
+  const whatsappText =
+    language === "es"
+      ? "Hola COLANT Connect, quiero más información."
+      : "Hello COLANT Connect, I would like more information."
+
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+    whatsappText
+  )}`
+
   useEffect(() => {
     loadEvents()
     loadBusinesses()
@@ -146,7 +157,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex justify-center">
-      <div className="w-full max-w-md min-h-screen bg-white text-slate-900 pb-24">
+      <div className="relative w-full max-w-md min-h-screen bg-white text-slate-900 pb-24">
         <div className="px-5 pt-8 pb-4">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -239,11 +250,11 @@ function App() {
 
           {activeTab === "admin" && (
             <AdminDashboard
-          token={localStorage.getItem("token")}
-          userProfile={userProfile}
-          language={language}
-          onBack={() => setActiveTab("profile")}
-          />
+              token={localStorage.getItem("token")}
+              userProfile={userProfile}
+              language={language}
+              onBack={() => setActiveTab("profile")}
+            />
           )}
 
           {activeTab === "profile" && (
@@ -256,6 +267,15 @@ function App() {
             />
           )}
         </div>
+
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-28 right-5 z-50 bg-green-500 hover:bg-green-600 text-white px-5 py-4 rounded-full shadow-2xl flex items-center gap-2 font-bold transition"
+        >
+          💬 {language === "es" ? "Contáctanos" : "Contact Us"}
+        </a>
 
         <BottomNavigation
           activeTab={activeTab}
