@@ -21,15 +21,19 @@ export async function requestNotificationPermission() {
   try {
     const supported = await isSupported();
 
+    console.log("Firebase supported:", supported);
+
     if (!supported) {
       console.log("Firebase Messaging no es compatible.");
       return null;
     }
 
     const permission = await Notification.requestPermission();
+
     console.log("Notification permission:", permission);
 
     if (permission !== "granted") {
+      console.log("El usuario rechazó las notificaciones.");
       return null;
     }
 
@@ -47,11 +51,27 @@ export async function requestNotificationPermission() {
       serviceWorkerRegistration: registration
     });
 
+    console.log("==================================");
     console.log("FCM TOKEN:", token);
+    console.log("==================================");
 
     return token;
   } catch (error) {
-    console.error("Firebase token error:", error);
+    console.log("==================================");
+    console.log("FIREBASE TOKEN ERROR");
+    console.log("==================================");
+
+    console.log(error);
+
+    console.log("Name:", error?.name);
+    console.log("Code:", error?.code);
+    console.log("Message:", error?.message);
+    console.log("Stack:", error?.stack);
+
+    console.log("JSON:", JSON.stringify(error));
+
+    console.log("==================================");
+
     return null;
   }
 }
