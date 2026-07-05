@@ -35,7 +35,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth_router, prefix="/auth")
 
 # Events
-app.include_router(events_router, prefix="/events")
+app.include_router(events_router)
 
 # Gallery
 app.include_router(gallery_router, prefix="/gallery")
