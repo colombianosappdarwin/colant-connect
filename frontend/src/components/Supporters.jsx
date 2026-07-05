@@ -19,6 +19,13 @@ function Supporters() {
         "We thank the Darwin Waterfront for investing in and supporting the delivery of Viva Colombia Fest; and for providing an iconic location that allows the community to come together and celebrate culture in the heart of Darwin.",
     },
     {
+      name: "SAMAF Consultants",
+      category: "Business Partner",
+      image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782717850/samaf_jgw1np.webp",
+      description:
+        "SAMAF Consultants is a migrant-founded accounting and business advisory firm based in Darwin. The company supports international students, migrants, humanitarian entrants and small businesses across Australia through professional accounting, taxation and business services. As a proud supporter of Viva Colombia Fest 2026, SAMAF contributes to strengthening multicultural communities and promoting inclusive growth in the Northern Territory.",
+    },
+    {
       name: "Migrant Workers Hub",
       category: "Community Partner",
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782717849/Migrant_txt0x3.webp",
@@ -87,14 +94,13 @@ function Supporters() {
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1783259379/Multicultural_Council_of_the_Northern_Territory_stpart.webp",
       description:
         "The Multicultural Council of the Northern Territory (MCNT) is the Territory's peak multicultural organisation, working to build a more inclusive, connected and culturally diverse community. Through advocacy, settlement support, community development and cultural initiatives, MCNT empowers people from all backgrounds to thrive and contribute to the Northern Territory. We are proud to partner with MCNT in celebrating diversity and strengthening our multicultural community through Viva Colombia Fest 2026.",
-      website: "https://mcnt.org.au",
     },
     {
       name: "Territory FM",
       category: "Media Partner",
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1783258616/Territory_FM_strnkz.webp",
       description:
-        "Territory FM is a leading community radio station in the Northern Territory, dedicated to connecting people through local news, music, entertainment and community stories. With a strong commitment to promoting cultural diversity and community engagement, Territory FM provides a platform that celebrates the voices and experiences of the Territory's multicultural communities. We are proud to have Territory FM as a Media Partner for Viva Colombia Fest 2026, helping share the spirit of Colombian culture across the Northern Territory.",
+        "Territory FM",
     },
     {
       name: "A to Z Media",
@@ -108,36 +114,28 @@ function Supporters() {
       category: "Business Partner",
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1783258630/Top_End_Maintenance_Removalists_vanjqj.webp",
       description:
-        "Top End Maintenance & Removalists is a trusted Northern Territory business providing professional maintenance, relocation and property services for residential and commercial clients. Known for its reliable service, experienced team and commitment to customer satisfaction, the company proudly supports local communities and businesses across the Territory. We are delighted to have Top End Maintenance & Removalists supporting Viva Colombia Fest 2026 and contributing to the success of this celebration of Colombian culture and multicultural diversity.",
+        "Top End Maintenance & Removalists",
     },
     {
       name: "Alma T Shirts",
       category: "Apparel Partner",
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1783258639/Alma_T_Shirts_indqzy.webp",
       description:
-        "Alma T Shirts is a creative apparel brand dedicated to producing high-quality custom clothing and merchandise that celebrates identity, culture and community. Through innovative design, premium craftsmanship and personalised products, Alma T Shirts helps organisations, events and businesses bring their ideas to life. We are proud to have Alma T Shirts supporting Viva Colombia Fest 2026 and helping showcase Colombian culture through creativity and community engagement.",
+        "Alma T Shirts",
     },
     {
       name: "Nicole Brown",
       category: "Community Partner",
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1783258654/Nicole_Brown_echies.webp",
       description:
-        "Nicole Brown is a passionate community advocate dedicated to supporting multicultural initiatives, cultural inclusion and community development across the Northern Territory. Through her ongoing commitment to bringing people together and supporting local events, Nicole has played an important role in strengthening connections between diverse communities. We are honoured to have Nicole Brown supporting Viva Colombia Fest 2026 and helping celebrate the richness and diversity of Colombian culture.",
+        "Nicole Brown",
     },
     {
       name: "Tequila & Sal",
       category: "Food & Beverage Partner",
       image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1783258659/Tequila_Sal_onvnez.webp",
       description:
-        "Tequila & Sal is a vibrant dining destination celebrating the rich flavours and traditions of Mexican cuisine. Known for its authentic dishes, handcrafted cocktails and welcoming atmosphere, the restaurant brings people together to enjoy memorable culinary experiences. We are proud to have Tequila & Sal supporting Viva Colombia Fest 2026 and contributing to the celebration of Latin American culture and multicultural diversity in the Northern Territory.",
-    },
-    {
-      name: "SAMAF Consultants",
-      category: "Business Partner",
-      image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782717850/samaf_jgw1np.webp",
-      description:
-        "SAMAF Consultants is a migrant-founded accounting and business advisory firm based in Darwin. The company supports international students, migrants, humanitarian entrants and small businesses across Australia through professional accounting, taxation and business services. As a proud supporter of Viva Colombia Fest 2026, SAMAF contributes to strengthening multicultural communities and promoting inclusive growth in the Northern Territory.",
-      website: "https://samaf.com.au",
+        "Tequila & Sal",
     },
   ]
 
