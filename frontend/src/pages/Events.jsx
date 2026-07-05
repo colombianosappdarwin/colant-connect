@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react"
+import axios from "axios"
 import { texts } from "../translations"
+import { API_URL } from "../config"
 
 const FESTIVAL_IMAGE =
   "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782313087/colombia-florece_yh0vna.png"
@@ -11,21 +14,67 @@ function Events({
 }) {
   const t = texts[language]
 
-  const fallbackEvents = [
-    {
-      id: "colombia-florece-2026",
-      title: "Colombia Florece",
-      description:
-        "A cultural festival celebrating Colombian food, music, dance, community and connection in Darwin.",
-      location: "Darwin Waterfront",
-      image_url: FESTIVAL_IMAGE,
-    },
-  ]
+  const [attendeeCounts, setAttendeeCounts] = useState({})
+  const [joinedEvents, setJoinedEvents] = useState({})
 
-  const visibleEvents = events.length > 0 ? events : fallbackEvents
+  const visibleEvents = events
 
-  const handleAttendEvent = (event) => {
-    alert(`✅ You are attending ${event.title}`)
+  useEffect(() => {
+    const loadAttendees = async () => {
+      try {
+        const counts = {}
+
+        for (const event of visibleEvents) {
+          const response = await axios.get(
+            `${API_URL}/events/${event.id}/attendees`
+          )
+
+          counts[event.id] = response.data.count
+        }
+
+        setAttendeeCounts(counts)
+      } catch (error) {
+        console.error("Error loading attendees:", error)
+      }
+    }
+
+    if (visibleEvents.length > 0) {
+      loadAttendees()
+    }
+  }, [visibleEvents])
+
+  const handleAttendEvent = async (eventId) => {
+    try {
+      const token = localStorage.getItem("token")
+
+      if (!token) {
+        alert("You must login first")
+        return
+      }
+
+      await axios.post(
+        `${API_URL}/events/${eventId}/join`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      setJoinedEvents((prev) => ({
+        ...prev,
+        [eventId]: true,
+      }))
+
+      setAttendeeCounts((prev) => ({
+        ...prev,
+        [eventId]: (prev[eventId] || 0) + 1,
+      }))
+    } catch (error) {
+      console.error("Error joining event:", error)
+      alert("Error joining the event")
+    }
   }
 
   const handleOpenMaps = (location) => {
@@ -47,6 +96,9 @@ function Events({
           const eventBusinesses = businesses.filter(
             (business) => business.event_id === event.id
           )
+
+          const isJoined = joinedEvents[event.id]
+          const count = attendeeCounts[event.id] || 0
 
           return (
             <div
@@ -81,7 +133,7 @@ function Events({
 
                 <div className="mt-6">
                   <div className="flex items-center justify-between text-sm text-slate-600 mb-4">
-                    <span>👥 183 attending</span>
+                    <span>👥 {count} attending</span>
 
                     <button
                       type="button"
@@ -94,10 +146,15 @@ function Events({
 
                   <button
                     type="button"
-                    onClick={() => handleAttendEvent(event)}
-                    className="w-full bg-blue-700 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
+                    onClick={() => handleAttendEvent(event.id)}
+                    disabled={isJoined}
+                    className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300 ${
+                      isJoined
+                        ? "bg-green-600 text-white"
+                        : "bg-blue-700 hover:bg-blue-800 text-white"
+                    }`}
                   >
-                    ✅ Attend Event
+                    {isJoined ? "✔ You're Attending" : "✅ Attend Event"}
                   </button>
                 </div>
 
