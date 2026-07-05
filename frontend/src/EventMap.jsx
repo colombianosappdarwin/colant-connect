@@ -26,16 +26,16 @@ function EventMap({ language = "es" }) {
       events:
         language === "es"
           ? [
-              "Presentaciones de folclor tradicional",
-              "Música en vivo",
-              "DJs",
-              "Talleres de baile",
+              { title: "Presentaciones de folclor tradicional", icon: "💃" },
+              { title: "Música en vivo", icon: "🎶" },
+              { title: "DJs", icon: "🎧" },
+              { title: "Talleres de baile", icon: "🕺" },
             ]
           : [
-              "Traditional folklore performances",
-              "Live music",
-              "DJs",
-              "Dance workshops",
+              { title: "Traditional folklore performances", icon: "💃" },
+              { title: "Live music", icon: "🎶" },
+              { title: "DJs", icon: "🎧" },
+              { title: "Dance workshops", icon: "🕺" },
             ],
     },
     B: {
@@ -47,35 +47,36 @@ function EventMap({ language = "es" }) {
       events:
         language === "es"
           ? [
-              "Cocina comunitaria colombiana",
-              "Negocios de comida latina",
-              "Puestos de comida local",
+              { title: "Cocina comunitaria colombiana", icon: "🍲" },
+              { title: "Negocios de comida latina", icon: "🌮" },
+              { title: "Puestos de comida local", icon: "🥘" },
             ]
           : [
-              "Colombian Community Kitchen",
-              "Latino food businesses",
-              "Local food stalls",
+              { title: "Colombian Community Kitchen", icon: "🍲" },
+              { title: "Latino food businesses", icon: "🌮" },
+              { title: "Local food stalls", icon: "🥘" },
             ],
     },
     C: {
       title: "Area C - Family Zone",
       subtitle: "La Plaza del Pueblo",
-      emoji: "👨‍👩‍👧‍👦",
-      color: "bg-yellow-500",
+      emoji: "🎪",
+      color: "bg-gradient-to-br from-blue-600 to-purple-600",
       image: AREA_IMAGES.C,
+      modern: true,
       events:
         language === "es"
           ? [
-              "Juegos tradicionales",
-              "Actividades para niños",
-              "Zona familiar",
-              "Integración comunitaria",
+              { title: "Juegos tradicionales", icon: "🎮" },
+              { title: "Actividades para niños", icon: "🎈" },
+              { title: "Zona familiar", icon: "⭐" },
+              { title: "Integración comunitaria", icon: "🤝" },
             ]
           : [
-              "Traditional games",
-              "Kids activities",
-              "Family zone",
-              "Community engagement",
+              { title: "Traditional games", icon: "🎮" },
+              { title: "Kids activities", icon: "🎈" },
+              { title: "Family zone", icon: "⭐" },
+              { title: "Community engagement", icon: "🤝" },
             ],
     },
     D: {
@@ -87,16 +88,16 @@ function EventMap({ language = "es" }) {
       events:
         language === "es"
           ? [
-              "Raíces, cultura y tradiciones",
-              "Justicia y memoria colectiva",
-              "Origami, pintura y talleres",
-              "Memoria histórica",
+              { title: "Raíces, cultura y tradiciones", icon: "🌿" },
+              { title: "Justicia y memoria colectiva", icon: "🕊️" },
+              { title: "Origami, pintura y talleres", icon: "🎨" },
+              { title: "Memoria histórica", icon: "📖" },
             ]
           : [
-              "Roots, culture and traditions",
-              "Justice and collective memory",
-              "Origami, painting and workshops",
-              "Historic memory",
+              { title: "Roots, culture and traditions", icon: "🌿" },
+              { title: "Justice and collective memory", icon: "🕊️" },
+              { title: "Origami, painting and workshops", icon: "🎨" },
+              { title: "Historic memory", icon: "📖" },
             ],
     },
     E: {
@@ -108,20 +109,20 @@ function EventMap({ language = "es" }) {
       events:
         language === "es"
           ? [
-              "Región Caribe",
-              "Región Pacífica",
-              "Región Andina",
-              "Orinoquía",
-              "Amazonía",
-              "Región Insular",
+              { title: "Región Caribe", icon: "🌊" },
+              { title: "Región Pacífica", icon: "🥁" },
+              { title: "Región Andina", icon: "⛰️" },
+              { title: "Orinoquía", icon: "🐎" },
+              { title: "Amazonía", icon: "🌳" },
+              { title: "Región Insular", icon: "🏝️" },
             ]
           : [
-              "Caribbean region",
-              "Pacific region",
-              "Andean region",
-              "Orinoco region",
-              "Amazon region",
-              "Insular region",
+              { title: "Caribbean region", icon: "🌊" },
+              { title: "Pacific region", icon: "🥁" },
+              { title: "Andean region", icon: "⛰️" },
+              { title: "Orinoco region", icon: "🐎" },
+              { title: "Amazon region", icon: "🌳" },
+              { title: "Insular region", icon: "🏝️" },
             ],
     },
   }
@@ -171,7 +172,7 @@ function EventMap({ language = "es" }) {
 
                 <button
                   onClick={() => setSelectedArea("C")}
-                  className="absolute left-[28%] top-[42%] w-[18%] h-[22%] rounded-2xl bg-yellow-500/20 border-2 border-yellow-500"
+                  className="absolute left-[28%] top-[42%] w-[18%] h-[22%] rounded-2xl bg-purple-500/20 border-2 border-purple-500"
                   aria-label="Area C"
                 />
 
@@ -201,10 +202,16 @@ function EventMap({ language = "es" }) {
                 ← {language === "es" ? "Volver al mapa general" : "Back to main map"}
               </button>
 
-              <div className="bg-blue-50 rounded-3xl p-4 border border-blue-100">
-                <div className="flex items-center gap-3 mb-3">
+              <div
+                className={
+                  selected.modern
+                    ? "bg-gradient-to-br from-indigo-50 via-white to-purple-50 rounded-3xl p-5 border border-indigo-100 shadow-sm"
+                    : "bg-blue-50 rounded-3xl p-4 border border-blue-100"
+                }
+              >
+                <div className="flex items-center gap-4 mb-5">
                   <div
-                    className={`${selected.color} text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl`}
+                    className={`${selected.color} text-white w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md`}
                   >
                     {selected.emoji}
                   </div>
@@ -214,23 +221,53 @@ function EventMap({ language = "es" }) {
                       {selected.title}
                     </h2>
 
-                    <p className="text-sm font-bold text-gray-600">
+                    <p
+                      className={
+                        selected.modern
+                          ? "text-sm font-extrabold text-purple-600"
+                          : "text-sm font-bold text-gray-600"
+                      }
+                    >
                       {selected.subtitle}
                     </p>
                   </div>
                 </div>
 
-                <h3 className="font-bold text-blue-950 mb-2">
+                <h3 className="font-extrabold text-blue-950 mb-4">
                   {language === "es" ? "Eventos en esta zona" : "Events in this area"}
                 </h3>
 
-                <div className="grid gap-2">
+                <div className="grid gap-3">
                   {selected.events.map((item) => (
                     <div
-                      key={item}
-                      className="bg-white rounded-xl p-3 text-sm border"
+                      key={item.title}
+                      className={
+                        selected.modern
+                          ? "bg-white rounded-2xl p-4 text-sm border border-slate-200 shadow-sm flex items-center justify-between"
+                          : "bg-white rounded-xl p-3 text-sm border flex items-center gap-2"
+                      }
                     >
-                      {selected.emoji} {item}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={
+                            selected.modern
+                              ? "w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-xl"
+                              : "text-lg"
+                          }
+                        >
+                          {item.icon}
+                        </div>
+
+                        <span className="font-bold text-slate-900">
+                          {item.title}
+                        </span>
+                      </div>
+
+                      {selected.modern && (
+                        <span className="text-purple-600 text-3xl leading-none">
+                          ›
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
