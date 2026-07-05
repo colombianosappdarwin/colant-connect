@@ -40,7 +40,9 @@ function Gallery({
   language = "es",
 }) {
   const t = texts[language]
-  const [selectedImage, setSelectedImage] = useState(null)
+
+  const [selectedImages, setSelectedImages] = useState([])
+  const [selectedIndex, setSelectedIndex] = useState(null)
 
   const fallbackEvent = {
     id: "colombia-florece-2026",
@@ -68,12 +70,15 @@ function Gallery({
             </h4>
 
             <div className="grid grid-cols-2 gap-4">
-              {photos.map((photo) => (
+              {photos.map((photo, index) => (
                 <img
                   key={photo.id}
                   src={photo.image_url}
                   alt="Gallery"
-                  onClick={() => setSelectedImage(photo.image_url)}
+                  onClick={() => {
+                    setSelectedImages(photos)
+                    setSelectedIndex(index)
+                  }}
                   className="w-full h-44 object-cover rounded-2xl shadow-md cursor-pointer hover:scale-105 transition"
                 />
               ))}
@@ -83,8 +88,19 @@ function Gallery({
       })}
 
       <ImageViewer
-        image={selectedImage}
-        onClose={() => setSelectedImage(null)}
+        images={selectedImages}
+        currentIndex={selectedIndex ?? 0}
+        onClose={() => setSelectedIndex(null)}
+        onNext={() =>
+          setSelectedIndex((prev) =>
+            prev === selectedImages.length - 1 ? 0 : prev + 1
+          )
+        }
+        onPrev={() =>
+          setSelectedIndex((prev) =>
+            prev === 0 ? selectedImages.length - 1 : prev - 1
+          )
+        }
       />
     </>
   )
