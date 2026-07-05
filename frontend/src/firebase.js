@@ -6,7 +6,7 @@ import {
 } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB2IVeOBqnPMEtF0JMfuiEcCW0JFcMzs6g",
+  apiKey: "AIzaSyB2IVEoBqnPMEtF0JMfuiEcCW0JFcMzs6g",
   authDomain: "colant-connect.firebaseapp.com",
   projectId: "colant-connect",
   storageBucket: "colant-connect.firebasestorage.app",

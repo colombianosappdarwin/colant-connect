@@ -2,7 +2,7 @@ importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js
 importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
 
 firebase.initializeApp({
-  apiKey: "AIzaSyB2IVeOBqnPMEtF0JMfuiEcCW0JFcMzs6g",
+  apiKey: "AIzaSyB2IVEoBqnPMEtF0JMfuiEcCW0JFcMzs6g",
   authDomain: "colant-connect.firebaseapp.com",
   projectId: "colant-connect",
   storageBucket: "colant-connect.firebasestorage.app",
