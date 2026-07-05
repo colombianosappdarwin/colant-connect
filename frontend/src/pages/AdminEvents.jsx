@@ -11,7 +11,7 @@ function AdminEvents({ token }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const EVENTS_URL = `${API_URL}/events/events/`;
+  const EVENTS_URL = `${API_URL}/events/`;
 
   const loadEvents = async () => {
     setLoading(true);
