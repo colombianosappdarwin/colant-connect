@@ -38,10 +38,13 @@ def create_notification(data: NotificationCreate, db: Session = Depends(get_db))
     db.refresh(notification)
 
     users = db.query(User).filter(
-        User.fcm_token.isnot(None)
+        User.fcm_token.isnot(None),
+        User.fcm_token != ""
     ).all()
 
     sent_count = 0
+    failed_count = 0
+    errors = []
 
     for user in users:
         try:
@@ -52,11 +55,18 @@ def create_notification(data: NotificationCreate, db: Session = Depends(get_db))
             )
             sent_count += 1
         except Exception as error:
-            print("Error sending push:", error)
+            failed_count += 1
+            errors.append({
+                "email": user.email,
+                "error": str(error)
+            })
 
     return {
         "notification": notification,
-        "push_sent": sent_count
+        "tokens_found": len(users),
+        "push_sent": sent_count,
+        "push_failed": failed_count,
+        "errors": errors
     }
 
 
