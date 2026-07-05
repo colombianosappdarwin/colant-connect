@@ -87,21 +87,26 @@ function Gallery({
         )
       })}
 
-      <ImageViewer
-        images={selectedImages}
-        currentIndex={selectedIndex ?? 0}
-        onClose={() => setSelectedIndex(null)}
-        onNext={() =>
-          setSelectedIndex((prev) =>
-            prev === selectedImages.length - 1 ? 0 : prev + 1
-          )
-        }
-        onPrev={() =>
-          setSelectedIndex((prev) =>
-            prev === 0 ? selectedImages.length - 1 : prev - 1
-          )
-        }
-      />
+      {selectedIndex !== null && (
+        <ImageViewer
+          images={selectedImages}
+          currentIndex={selectedIndex}
+          onClose={() => {
+            setSelectedIndex(null)
+            setSelectedImages([])
+          }}
+          onNext={() =>
+            setSelectedIndex((prev) =>
+              prev === selectedImages.length - 1 ? 0 : prev + 1
+            )
+          }
+          onPrev={() =>
+            setSelectedIndex((prev) =>
+              prev === 0 ? selectedImages.length - 1 : prev - 1
+            )
+          }
+        />
+      )}
     </>
   )
 }
