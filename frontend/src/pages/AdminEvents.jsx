@@ -7,6 +7,7 @@ function AdminEvents({ token }) {
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [image, setImage] = useState(null);
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,20 +39,23 @@ function AdminEvents({ token }) {
     }
 
     try {
-      await axios.post(
-        EVENTS_URL,
-        {
-          title,
-          description,
-          location,
-          event_date: eventDate,
+      const formData = new FormData();
+
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("location", location);
+      formData.append("event_date", eventDate);
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await axios.post(EVENTS_URL, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      });
 
       alert("Event created successfully");
 
@@ -59,6 +63,7 @@ function AdminEvents({ token }) {
       setDescription("");
       setLocation("");
       setEventDate("");
+      setImage(null);
 
       loadEvents();
     } catch (error) {
@@ -115,9 +120,16 @@ function AdminEvents({ token }) {
 
       <input
         type="datetime-local"
-        className="w-full border rounded-xl p-3 mb-5"
+        className="w-full border rounded-xl p-3 mb-3"
         value={eventDate}
         onChange={(e) => setEventDate(e.target.value)}
+      />
+
+      <input
+        type="file"
+        accept="image/*"
+        className="w-full border rounded-xl p-3 mb-5"
+        onChange={(e) => setImage(e.target.files[0])}
       />
 
       <button
@@ -141,19 +153,29 @@ function AdminEvents({ token }) {
         events.map((event) => (
           <div
             key={event.id}
-            className="border rounded-2xl p-4 mb-3 flex justify-between items-center"
+            className="border rounded-2xl p-4 mb-3"
           >
-            <div>
-              <h4 className="font-bold text-lg">{event.title}</h4>
-              <p className="text-gray-600 text-sm">{event.location}</p>
-            </div>
+            {event.image_url && (
+              <img
+                src={event.image_url}
+                alt={event.title}
+                className="w-full h-40 object-cover rounded-xl mb-3"
+              />
+            )}
 
-            <button
-              onClick={() => deleteEvent(event.id)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold"
-            >
-              Delete
-            </button>
+            <div className="flex justify-between items-center">
+              <div>
+                <h4 className="font-bold text-lg">{event.title}</h4>
+                <p className="text-gray-600 text-sm">{event.location}</p>
+              </div>
+
+              <button
+                onClick={() => deleteEvent(event.id)}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))
       )}
