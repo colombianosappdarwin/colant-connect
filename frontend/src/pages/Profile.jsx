@@ -2,7 +2,7 @@ import { useState } from "react"
 import ProfileCard from "../components/ProfileCard"
 import ProfileForm from "../components/ProfileForm"
 
-function Profile({ userProfile, setUserProfile, logout }) {
+function Profile({ userProfile, setUserProfile, logout, setActiveTab }) {
   const [editingProfile, setEditingProfile] = useState(false)
 
   const handleProfileUpdated = (updatedProfile) => {
@@ -23,6 +23,7 @@ function Profile({ userProfile, setUserProfile, logout }) {
     <ProfileCard
       userProfile={userProfile}
       onEditProfile={() => setEditingProfile(true)}
+      onAdminPanel={() => setActiveTab("admin")}
       onLogout={logout}
     />
   )

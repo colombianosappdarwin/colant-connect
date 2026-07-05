@@ -14,15 +14,7 @@ function ProfileCard({
 
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-5xl">
-            {userProfile?.profile_photo_url ? (
-              <img
-                src={userProfile.profile_photo_url}
-                alt="Profile"
-                className="w-20 h-20 rounded-full object-cover"
-              />
-            ) : (
-              "👤"
-            )}
+            👤
           </div>
 
           <div>
@@ -41,6 +33,7 @@ function ProfileCard({
 
       <div className="-mt-12 mx-4 bg-white rounded-[28px] shadow-lg overflow-hidden border border-slate-100">
         <button
+          type="button"
           onClick={onEditProfile}
           className="w-full flex items-center justify-between px-6 py-6 border-b border-slate-100"
         >
@@ -59,7 +52,8 @@ function ProfileCard({
 
         {isAdmin && (
           <button
-            onClick={onAdminClick}
+            type="button"
+            onClick={() => onAdminClick()}
             className="w-full flex items-center justify-between px-6 py-6 border-b border-slate-100"
           >
             <div className="flex items-center gap-4">
@@ -77,6 +71,7 @@ function ProfileCard({
         )}
 
         <button
+          type="button"
           onClick={onLogout}
           className="w-full flex items-center justify-between px-6 py-6"
         >

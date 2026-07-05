@@ -77,7 +77,7 @@ function App() {
 
   const loadEvents = () => {
     axios
-      .get(`${API_URL}/events/events/`)
+      .get(`${API_URL}/events/`)
       .then((response) => setEvents(response.data))
       .catch((error) => console.log(error))
   }
@@ -239,11 +239,11 @@ function App() {
 
           {activeTab === "admin" && (
             <AdminDashboard
-              events={events}
-              businesses={businesses}
-              gallery={gallery}
-              userProfile={userProfile}
-            />
+          token={localStorage.getItem("token")}
+          userProfile={userProfile}
+          language={language}
+          onBack={() => setActiveTab("profile")}
+          />
           )}
 
           {activeTab === "profile" && (
