@@ -11,11 +11,13 @@ function AdminEvents({ token }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const EVENTS_URL = `${API_URL}/events/events/`;
+
   const loadEvents = async () => {
     setLoading(true);
 
     try {
-      const response = await axios.get(`${API_URL}/events/`);
+      const response = await axios.get(EVENTS_URL);
       setEvents(response.data);
     } catch (error) {
       console.log("Error loading events:", error);
@@ -37,11 +39,11 @@ function AdminEvents({ token }) {
 
     try {
       await axios.post(
-        `${API_URL}/events/`,
+        EVENTS_URL,
         {
-          title: title,
-          description: description,
-          location: location,
+          title,
+          description,
+          location,
           event_date: eventDate,
         },
         {
@@ -69,7 +71,7 @@ function AdminEvents({ token }) {
     if (!window.confirm("Delete this event?")) return;
 
     try {
-      await axios.delete(`${API_URL}/events/${id}/`, {
+      await axios.delete(`${EVENTS_URL}${id}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -143,14 +145,7 @@ function AdminEvents({ token }) {
           >
             <div>
               <h4 className="font-bold text-lg">{event.title}</h4>
-
               <p className="text-gray-600 text-sm">{event.location}</p>
-
-              {event.event_date && (
-                <p className="text-gray-500 text-sm">
-                  {new Date(event.event_date).toLocaleString()}
-                </p>
-              )}
             </div>
 
             <button
