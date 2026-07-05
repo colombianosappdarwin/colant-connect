@@ -24,6 +24,18 @@ function Events({
 
   const visibleEvents = events.length > 0 ? events : fallbackEvents
 
+  const handleAttendEvent = (event) => {
+    alert(`✅ You are attending ${event.title}`)
+  }
+
+  const handleOpenMaps = (location) => {
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      location || "Darwin Waterfront"
+    )}`
+
+    window.open(mapsUrl, "_blank")
+  }
+
   return (
     <>
       <h3 className="text-3xl font-extrabold text-blue-950 mb-5">
@@ -73,6 +85,7 @@ function Events({
 
                     <button
                       type="button"
+                      onClick={() => handleOpenMaps(event.location)}
                       className="text-blue-700 hover:text-blue-900 font-semibold"
                     >
                       📍 Open in Maps
@@ -81,6 +94,7 @@ function Events({
 
                   <button
                     type="button"
+                    onClick={() => handleAttendEvent(event)}
                     className="w-full bg-blue-700 hover:bg-blue-800 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300"
                   >
                     ✅ Attend Event
