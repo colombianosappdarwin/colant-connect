@@ -77,7 +77,7 @@ function App() {
 
   const loadEvents = () => {
     axios
-      .get(`${API_URL}/events/`)
+      .get(`${API_URL}/events/events/`)
       .then((response) => setEvents(response.data))
       .catch((error) => console.log(error))
   }

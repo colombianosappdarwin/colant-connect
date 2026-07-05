@@ -5,7 +5,7 @@ const getToken = () => {
   return localStorage.getItem("token");
 };
 
-const EVENTS_URL = `${API_URL}/events/`;
+const EVENTS_URL = `${API_URL}/events/events/`;
 
 export const getEvents = async () => {
   const response = await axios.get(EVENTS_URL);
