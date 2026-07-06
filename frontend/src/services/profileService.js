@@ -20,7 +20,7 @@ export const getProfile = async () => {
 export const updateProfile = async (profileData) => {
   const token = getToken();
 
-  const response = await axios.put(`${API_URL}/users/me`, profileData, {
+  const response = await axios.put(`${API_URL}/auth/me`, profileData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
