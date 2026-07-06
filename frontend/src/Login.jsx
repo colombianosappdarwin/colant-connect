@@ -173,10 +173,18 @@ function Login({ onRegisterClick, onLoginSuccess }) {
 
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-blue-950">
-            {t.title}
+          {t.title}
           </h1>
 
-          <p className="text-blue-900 mt-2">{t.subtitle}</p>
+          <p className="text-blue-900 mt-2">
+          {t.subtitle}
+          </p>
+
+        <div className="mt-3 inline-flex items-center px-4 py-1 rounded-full bg-yellow-100 border border-yellow-400">
+          <span className="text-yellow-800 font-bold text-sm">
+          🚧 Version Beta v1.1
+          </span>
+          </div>
         </div>
 
         {!forgotMode ? (
