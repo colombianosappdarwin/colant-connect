@@ -182,7 +182,7 @@ function Login({ onRegisterClick, onLoginSuccess }) {
 
         <div className="mt-3 inline-flex items-center px-4 py-1 rounded-full bg-yellow-100 border border-yellow-400">
           <span className="text-yellow-800 font-bold text-sm">
-          🚧 Version Beta v1.1
+          Version Beta v1.1
           </span>
           </div>
         </div>
