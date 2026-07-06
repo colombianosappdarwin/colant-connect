@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from datetime import datetime
 from uuid import UUID
 
 from app.database.database import get_db
 from app.models.event import Event
-from app.events.schemas import EventCreate
 from app.events.attendee_model import EventAttendee
 from app.core.security import verify_token
 from app.models.user_model import User
-
+from app.cloudinary_service import upload_image
 
 router = APIRouter(
     prefix="/events",
@@ -19,20 +18,29 @@ router = APIRouter(
 
 @router.get("/")
 def get_events(db: Session = Depends(get_db)):
-    events = db.query(Event).all()
-    return events
+    return db.query(Event).all()
 
 
 @router.post("/")
 def create_event(
-    event: EventCreate,
+    title: str = Form(...),
+    description: str = Form(...),
+    location: str = Form(...),
+    event_date: datetime = Form(...),
+    image: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
+    image_url = ""
+
+    if image:
+        image_url = upload_image(image)
+
     new_event = Event(
-        title=event.title,
-        description=event.description,
-        location=event.location,
-        event_date=event.event_date,
+        title=title,
+        description=description,
+        location=location,
+        event_date=event_date,
+        image_url=image_url,
         created_at=datetime.utcnow()
     )
 
@@ -46,7 +54,11 @@ def create_event(
 @router.put("/{event_id}")
 def update_event(
     event_id: str,
-    event: EventCreate,
+    title: str = Form(...),
+    description: str = Form(...),
+    location: str = Form(...),
+    event_date: datetime = Form(...),
+    image: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
     event_uuid = UUID(event_id)
@@ -56,14 +68,15 @@ def update_event(
     ).first()
 
     if not db_event:
-        return {
-            "error": "Event not found"
-        }
+        return {"error": "Event not found"}
 
-    db_event.title = event.title
-    db_event.description = event.description
-    db_event.location = event.location
-    db_event.event_date = event.event_date
+    db_event.title = title
+    db_event.description = description
+    db_event.location = location
+    db_event.event_date = event_date
+
+    if image:
+        db_event.image_url = upload_image(image)
 
     db.commit()
     db.refresh(db_event)
@@ -83,16 +96,12 @@ def delete_event(
     ).first()
 
     if not db_event:
-        return {
-            "error": "Event not found"
-        }
+        return {"error": "Event not found"}
 
     db.delete(db_event)
     db.commit()
 
-    return {
-        "message": "Event deleted successfully"
-    }
+    return {"message": "Event deleted successfully"}
 
 
 @router.post("/{event_id}/join")
@@ -106,9 +115,7 @@ def join_event(
     ).first()
 
     if not user:
-        return {
-            "error": "User not found"
-        }
+        return {"error": "User not found"}
 
     event_uuid = UUID(event_id)
 
@@ -117,9 +124,7 @@ def join_event(
     ).first()
 
     if not event:
-        return {
-            "error": "Event not found"
-        }
+        return {"error": "Event not found"}
 
     existing = db.query(EventAttendee).filter(
         EventAttendee.user_id == user.id,
@@ -127,9 +132,7 @@ def join_event(
     ).first()
 
     if existing:
-        return {
-            "message": "Already joined"
-        }
+        return {"message": "Already joined"}
 
     attendee = EventAttendee(
         user_id=user.id,
@@ -138,11 +141,8 @@ def join_event(
 
     db.add(attendee)
     db.commit()
-    db.refresh(attendee)
 
-    return {
-        "message": "Joined successfully"
-    }
+    return {"message": "Joined successfully"}
 
 
 @router.get("/{event_id}/attendees")

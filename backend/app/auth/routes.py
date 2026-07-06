@@ -59,6 +59,44 @@ class FCMTokenRequest(BaseModel):
     fcm_token: str
 
 
+class UserProfileUpdate(BaseModel):
+    full_name: str | None = None
+    gender: str | None = None
+    phone: str | None = None
+    birth_date: date | None = None
+    country_origin: str | None = None
+    city_origin: str | None = None
+    industry: str | None = None
+    visa_type: str | None = None
+    arrival_date: date | None = None
+    preferred_language: str | None = None
+    profile_photo_url: str | None = None
+
+
+def user_to_dict(user):
+    return {
+        "id": str(user.id),
+        "full_name": user.full_name,
+        "email": user.email,
+        "gender": user.gender,
+        "phone": user.phone,
+        "birth_date": user.birth_date,
+        "country_origin": user.country_origin,
+        "city_origin": user.city_origin,
+        "industry": user.industry,
+        "visa_type": user.visa_type,
+        "arrival_date": user.arrival_date,
+        "preferred_language": user.preferred_language,
+        "profile_photo_url": user.profile_photo_url,
+        "role": user.role,
+        "is_active": user.is_active,
+        "email_verified": user.email_verified,
+        "last_login": user.last_login,
+        "created_at": user.created_at,
+        "fcm_token": user.fcm_token
+    }
+
+
 def hash_password(password: str):
     return pwd_context.hash(password.strip())
 
@@ -313,27 +351,40 @@ def get_me(email: str = Depends(verify_token)):
         db.close()
         raise HTTPException(status_code=403, detail="User account is blocked")
 
-    result = {
-        "id": str(user.id),
-        "full_name": user.full_name,
-        "email": user.email,
-        "gender": user.gender,
-        "phone": user.phone,
-        "birth_date": user.birth_date,
-        "country_origin": user.country_origin,
-        "city_origin": user.city_origin,
-        "industry": user.industry,
-        "visa_type": user.visa_type,
-        "arrival_date": user.arrival_date,
-        "preferred_language": user.preferred_language,
-        "profile_photo_url": user.profile_photo_url,
-        "role": user.role,
-        "is_active": user.is_active,
-        "email_verified": user.email_verified,
-        "last_login": user.last_login,
-        "created_at": user.created_at,
-        "fcm_token": user.fcm_token
-    }
+    result = user_to_dict(user)
+
+    db.close()
+
+    return result
+
+
+@router.put("/me")
+def update_me(
+    request: UserProfileUpdate,
+    email: str = Depends(verify_token)
+):
+    db = SessionLocal()
+
+    user = get_user_by_email(db, email)
+
+    if not user:
+        db.close()
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not user.is_active:
+        db.close()
+        raise HTTPException(status_code=403, detail="User account is blocked")
+
+    data = request.dict(exclude_unset=True)
+
+    for key, value in data.items():
+        if hasattr(user, key):
+            setattr(user, key, value)
+
+    db.commit()
+    db.refresh(user)
+
+    result = user_to_dict(user)
 
     db.close()
 
