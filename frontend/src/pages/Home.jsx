@@ -1,6 +1,9 @@
 import colombiaFlorece from "../assets/colombia-florece.png"
 import EventCountdown from "../EventCountdown"
 import AboutColant from "../components/AboutColant"
+import EventMap from "../EventMap"
+import FestivalAgenda from "../components/FestivalAgenda"
+import Supporters from "../components/Supporters"
 import { texts } from "../translations"
 
 function Home({
@@ -26,6 +29,9 @@ function Home({
 
   return (
     <>
+      {/* PRUEBA */}
+      <FestivalAgenda />
+
       <div className="mt-8 flex items-center justify-between mb-3">
         <h3 className="font-bold text-lg">
           {t.upcomingEvents}
@@ -80,6 +86,10 @@ function Home({
       </div>
 
       <AboutColant />
+
+      <EventMap />
+
+      <Supporters />
     </>
   )
 }
