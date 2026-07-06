@@ -123,7 +123,8 @@ function App() {
   const logout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("email")
-    window.location.reload()
+    setUserProfile(null)
+    setActiveTab("home")
   }
 
   if (!userProfile) {
@@ -152,7 +153,12 @@ function App() {
       )
     }
 
-    return <Login onRegisterClick={() => setAuthMode("register")} />
+    return (
+      <Login
+        onRegisterClick={() => setAuthMode("register")}
+        onLoginSuccess={(profile) => setUserProfile(profile)}
+      />
+    )
   }
 
   return (

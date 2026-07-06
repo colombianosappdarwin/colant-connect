@@ -4,11 +4,12 @@ import { API_URL } from "./config";
 import backgroundImage from "./assets/Colant.png";
 import { requestNotificationPermission } from "./firebase";
 
-function Login({ onRegisterClick }) {
+function Login({ onRegisterClick, onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [language, setLanguage] = useState("es");
   const [forgotMode, setForgotMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const texts = {
     es: {
@@ -17,12 +18,12 @@ function Login({ onRegisterClick }) {
       email: "Correo electrónico",
       password: "Contraseña",
       login: "Iniciar Sesión",
+      loggingIn: "Ingresando...",
       forgot: "¿Olvidaste tu contraseña?",
       sendReset: "Enviar recuperación",
       backLogin: "Volver al inicio de sesión",
       noAccount: "¿No tienes cuenta?",
       register: "Regístrate abajo",
-      success: "Login correcto",
       error: "Correo o contraseña incorrectos",
       resetSuccess: "Solicitud de recuperación enviada",
       resetError: "Error enviando recuperación",
@@ -33,12 +34,12 @@ function Login({ onRegisterClick }) {
       email: "Email",
       password: "Password",
       login: "Sign In",
+      loggingIn: "Signing in...",
       forgot: "Forgot your password?",
       sendReset: "Send reset request",
       backLogin: "Back to login",
       noAccount: "Don't have an account?",
       register: "Create an account below",
-      success: "Login successful",
       error: "Incorrect email or password",
       resetSuccess: "Recovery request sent",
       resetError: "Error sending recovery request",
@@ -75,6 +76,8 @@ function Login({ onRegisterClick }) {
     e.preventDefault();
 
     try {
+      setLoading(true);
+
       const formData = new URLSearchParams();
       formData.append("username", email.trim().toLowerCase());
       formData.append("password", password.trim());
@@ -93,10 +96,20 @@ function Login({ onRegisterClick }) {
 
       await saveFcmToken(jwtToken);
 
-      window.location.reload();
+      const profileResponse = await axios.get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+
+      if (onLoginSuccess) {
+        onLoginSuccess(profileResponse.data);
+      }
     } catch (error) {
       console.error(error.response?.data || error);
       alert(error.response?.data?.detail || t.error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,9 +201,10 @@ function Login({ onRegisterClick }) {
 
             <button
               type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-2xl shadow-lg transition"
+              disabled={loading}
+              className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-2xl shadow-lg transition disabled:opacity-60"
             >
-              {t.login}
+              {loading ? t.loggingIn : t.login}
             </button>
 
             <button
