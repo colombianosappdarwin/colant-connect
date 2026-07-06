@@ -93,7 +93,6 @@ function Login({ onRegisterClick }) {
 
       await saveFcmToken(jwtToken);
 
-      alert(t.success);
       window.location.reload();
     } catch (error) {
       console.error(error.response?.data || error);
