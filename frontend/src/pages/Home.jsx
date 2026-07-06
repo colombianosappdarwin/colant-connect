@@ -1,8 +1,6 @@
 import colombiaFlorece from "../assets/colombia-florece.png"
 import EventCountdown from "../EventCountdown"
 import AboutColant from "../components/AboutColant"
-import EventMap from "../EventMap"
-import Supporters from "../components/Supporters"
 import { texts } from "../translations"
 
 function Home({
@@ -82,10 +80,6 @@ function Home({
       </div>
 
       <AboutColant />
-
-      <EventMap />
-
-      <Supporters />
     </>
   )
 }

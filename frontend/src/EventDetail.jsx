@@ -92,4 +92,4 @@ function EventDetail({ event, language = "es" }) {
   )
 }
 
-export default EventDetail
+export default EventDetail  
