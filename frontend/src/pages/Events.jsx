@@ -16,6 +16,17 @@ function Events({
 
   const [attendeeCounts, setAttendeeCounts] = useState({})
   const [joinedEvents, setJoinedEvents] = useState({})
+  const [now, setNow] = useState(new Date())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date())
+    }, 1000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [])
 
   useEffect(() => {
     const loadAttendees = async () => {
@@ -135,6 +146,47 @@ function Events({
     ).format(date)
   }
 
+  const getCountdown = (dateValue) => {
+    if (!dateValue) return null
+
+    const targetDate = new Date(dateValue)
+
+    if (Number.isNaN(targetDate.getTime())) {
+      return null
+    }
+
+    const difference = targetDate.getTime() - now.getTime()
+
+    if (difference <= 0) {
+      return {
+        started: true,
+        text:
+          language === "es"
+            ? "El evento ya comenzó"
+            : "The event has started",
+      }
+    }
+
+    const totalSeconds = Math.floor(difference / 1000)
+
+    const days = Math.floor(totalSeconds / 86400)
+    const hours = Math.floor((totalSeconds % 86400) / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+
+    return {
+      started: false,
+      days,
+      hours,
+      minutes,
+      seconds,
+    }
+  }
+
+  const formatCountdownNumber = (value) => {
+    return String(value).padStart(2, "0")
+  }
+
   return (
     <>
       <h3 className="mb-5 text-3xl font-extrabold text-blue-950">
@@ -160,6 +212,7 @@ function Events({
             const count = attendeeCounts[event.id] || 0
             const formattedDate = formatEventDate(event.event_date)
             const formattedTime = formatEventTime(event.event_date)
+            const countdown = getCountdown(event.event_date)
 
             return (
               <article
@@ -190,17 +243,11 @@ function Events({
                   )}
 
                   <div className="mt-4 grid gap-2 text-sm text-slate-700">
-                    {formattedDate && (
-                      <p>📅 {formattedDate}</p>
-                    )}
+                    {formattedDate && <p>📅 {formattedDate}</p>}
 
-                    {formattedTime && (
-                      <p>🕓 {formattedTime}</p>
-                    )}
+                    {formattedTime && <p>🕓 {formattedTime}</p>}
 
-                    <p>
-                      📍 {event.location || "Darwin"}
-                    </p>
+                    <p>📍 {event.location || "Darwin"}</p>
 
                     <p>
                       👥{" "}
@@ -209,6 +256,64 @@ function Events({
                         : "COLANT Community"}
                     </p>
                   </div>
+
+                  {countdown && (
+                    <div className="mt-5 overflow-hidden rounded-2xl bg-slate-950 p-4 text-white shadow-lg">
+                      <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                        {language === "es"
+                          ? "Tiempo restante"
+                          : "Time remaining"}
+                      </p>
+
+                      {countdown.started ? (
+                        <p className="mt-2 text-center text-lg font-extrabold">
+                          {countdown.text}
+                        </p>
+                      ) : (
+                        <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                          <div className="rounded-xl bg-white/10 px-2 py-3">
+                            <p className="text-xl font-extrabold">
+                              {formatCountdownNumber(countdown.days)}
+                            </p>
+                            <p className="mt-1 text-[10px] uppercase text-slate-400">
+                              {language === "es" ? "Días" : "Days"}
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl bg-white/10 px-2 py-3">
+                            <p className="text-xl font-extrabold">
+                              {formatCountdownNumber(countdown.hours)}
+                            </p>
+                            <p className="mt-1 text-[10px] uppercase text-slate-400">
+                              {language === "es" ? "Horas" : "Hours"}
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl bg-white/10 px-2 py-3">
+                            <p className="text-xl font-extrabold">
+                              {formatCountdownNumber(countdown.minutes)}
+                            </p>
+                            <p className="mt-1 text-[10px] uppercase text-slate-400">
+                              {language === "es"
+                                ? "Minutos"
+                                : "Minutes"}
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl bg-white/10 px-2 py-3">
+                            <p className="text-xl font-extrabold">
+                              {formatCountdownNumber(countdown.seconds)}
+                            </p>
+                            <p className="mt-1 text-[10px] uppercase text-slate-400">
+                              {language === "es"
+                                ? "Segundos"
+                                : "Seconds"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mt-6">
                     <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
@@ -235,9 +340,7 @@ function Events({
 
                     <button
                       type="button"
-                      onClick={() =>
-                        handleAttendEvent(event.id)
-                      }
+                      onClick={() => handleAttendEvent(event.id)}
                       disabled={isJoined}
                       className={`w-full rounded-2xl py-4 text-lg font-bold shadow-lg transition-all duration-300 ${
                         isJoined
