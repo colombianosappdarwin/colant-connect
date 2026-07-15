@@ -21,6 +21,7 @@ const emptyForm = {
   description: "",
   location: "",
   event_date: "",
+  image: null,
   image_url: "",
 }
 
@@ -32,7 +33,6 @@ function EventsAdmin({ onEventsUpdated }) {
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
 
   const loadEvents = async () => {
     try {
@@ -48,7 +48,18 @@ function EventsAdmin({ onEventsUpdated }) {
     loadEvents()
   }, [])
 
+  const clearPreview = () => {
+    if (
+      formData.image_url &&
+      formData.image_url.startsWith("blob:")
+    ) {
+      URL.revokeObjectURL(formData.image_url)
+    }
+  }
+
   const resetForm = () => {
+    clearPreview()
+
     setFormData(emptyForm)
     setEditingId(null)
     setShowForm(false)
@@ -71,7 +82,7 @@ function EventsAdmin({ onEventsUpdated }) {
     fileInputRef.current?.click()
   }
 
-  const handleImageChange = async (event) => {
+  const handleImageChange = (event) => {
     const file = event.target.files?.[0]
 
     if (!file) return
@@ -81,58 +92,19 @@ function EventsAdmin({ onEventsUpdated }) {
       return
     }
 
-    try {
-      setUploadingImage(true)
+    clearPreview()
 
-      const cloudName = "dtlmi9fgx"
-      const uploadPreset = "colant_profiles"
-
-      const uploadData = new FormData()
-      uploadData.append("file", file)
-      uploadData.append("upload_preset", uploadPreset)
-      uploadData.append("folder", "colant/events")
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: uploadData,
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok || !data.secure_url) {
-        console.error("Cloudinary error:", data)
-
-        alert(
-          data?.error?.message ||
-            "No fue posible subir la imagen del evento."
-        )
-
-        return
-      }
-
-      setFormData((previous) => ({
-        ...previous,
-        image_url: data.secure_url,
-      }))
-    } catch (error) {
-      console.error(error)
-      alert("Error subiendo la imagen.")
-    } finally {
-      setUploadingImage(false)
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
-    }
+    setFormData((previous) => ({
+      ...previous,
+      image: file,
+      image_url: URL.createObjectURL(file),
+    }))
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (!formData.image_url) {
+    if (!editingId && !formData.image) {
       alert("Selecciona la imagen principal del evento.")
       return
     }
@@ -148,10 +120,10 @@ function EventsAdmin({ onEventsUpdated }) {
         await createEvent(formData)
       }
 
-      resetForm()
-
       await loadEvents()
       await onEventsUpdated?.()
+
+      resetForm()
 
       alert(
         wasEditing
@@ -159,7 +131,11 @@ function EventsAdmin({ onEventsUpdated }) {
           : "Evento creado correctamente"
       )
     } catch (error) {
-      console.error(error)
+      console.error(
+        "Error saving event:",
+        error?.response?.data || error
+      )
+
       alert("Error guardando el evento")
     } finally {
       setSaving(false)
@@ -167,6 +143,8 @@ function EventsAdmin({ onEventsUpdated }) {
   }
 
   const handleEdit = (event) => {
+    clearPreview()
+
     setEditingId(event.id)
 
     setFormData({
@@ -176,6 +154,7 @@ function EventsAdmin({ onEventsUpdated }) {
       event_date: event.event_date
         ? event.event_date.slice(0, 16)
         : "",
+      image: null,
       image_url: event.image_url || "",
     })
 
@@ -196,7 +175,6 @@ function EventsAdmin({ onEventsUpdated }) {
 
     try {
       await deleteEvent(eventId)
-
       await loadEvents()
       await onEventsUpdated?.()
     } catch (error) {
@@ -299,8 +277,7 @@ function EventsAdmin({ onEventsUpdated }) {
                   <button
                     type="button"
                     onClick={handleImageClick}
-                    disabled={uploadingImage}
-                    className="absolute bottom-3 right-3 flex items-center gap-2 rounded-xl bg-black/75 px-4 py-2 text-sm font-bold text-white backdrop-blur disabled:opacity-60"
+                    className="absolute bottom-3 right-3 flex items-center gap-2 rounded-xl bg-black/75 px-4 py-2 text-sm font-bold text-white backdrop-blur"
                   >
                     <Camera size={17} />
                     Cambiar imagen
@@ -310,15 +287,12 @@ function EventsAdmin({ onEventsUpdated }) {
                 <button
                   type="button"
                   onClick={handleImageClick}
-                  disabled={uploadingImage}
-                  className="mt-2 flex h-44 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-slate-400 hover:bg-slate-100 disabled:opacity-60"
+                  className="mt-2 flex h-44 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-slate-400 hover:bg-slate-100"
                 >
                   <Camera size={30} />
 
                   <span className="mt-3 font-bold text-slate-700">
-                    {uploadingImage
-                      ? "Subiendo imagen..."
-                      : "Seleccionar imagen"}
+                    Seleccionar imagen
                   </span>
 
                   <span className="mt-1 text-xs">
@@ -414,7 +388,7 @@ function EventsAdmin({ onEventsUpdated }) {
 
             <button
               type="submit"
-              disabled={saving || uploadingImage}
+              disabled={saving}
               className="w-full rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
               {saving
