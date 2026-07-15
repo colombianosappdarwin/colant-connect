@@ -39,7 +39,9 @@ function App() {
   const t = texts[language]
 
   const toggleLanguage = () => {
-    setLanguage(language === "es" ? "en" : "es")
+    setLanguage((previousLanguage) =>
+      previousLanguage === "es" ? "en" : "es"
+    )
   }
 
   const whatsappNumber = "+61405376310"
@@ -53,6 +55,72 @@ function App() {
     whatsappText
   )}`
 
+  const loadEvents = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/events/`)
+
+      setEvents(
+        Array.isArray(response.data)
+          ? response.data
+          : []
+      )
+    } catch (error) {
+      console.error("Error loading events:", error)
+    }
+  }
+
+  const loadBusinesses = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/businesses/`
+      )
+
+      setBusinesses(
+        Array.isArray(response.data)
+          ? response.data
+          : []
+      )
+    } catch (error) {
+      console.error("Error loading businesses:", error)
+    }
+  }
+
+  const loadHomeGallery = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/gallery/${HOME_EVENT_ID}`
+      )
+
+      setGallery(
+        Array.isArray(response.data)
+          ? response.data
+          : []
+      )
+    } catch (error) {
+      console.error("Error loading home gallery:", error)
+    }
+  }
+
+  const loadGallery = async (eventId) => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/gallery/${eventId}`
+      )
+
+      setGalleryByEvent((previous) => ({
+        ...previous,
+        [eventId]: Array.isArray(response.data)
+          ? response.data
+          : [],
+      }))
+    } catch (error) {
+      console.error(
+        `Error loading gallery for event ${eventId}:`,
+        error
+      )
+    }
+  }
+
   useEffect(() => {
     loadEvents()
     loadBusinesses()
@@ -60,76 +128,51 @@ function App() {
 
     const token = localStorage.getItem("token")
 
-    if (token) {
-      axios
-        .get(`${API_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setUserProfile(response.data)
-        })
-        .catch((error) => {
-          console.log(error)
-          localStorage.removeItem("token")
-          localStorage.removeItem("email")
-        })
-    }
+    if (!token) return
+
+    axios
+      .get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setUserProfile(response.data)
+      })
+      .catch((error) => {
+        console.error("Error loading profile:", error)
+
+        localStorage.removeItem("token")
+        localStorage.removeItem("email")
+        setUserProfile(null)
+      })
   }, [])
 
   useEffect(() => {
-    if (activeTab === "gallery" && events.length > 0) {
-      events.forEach((event) => {
-        loadGallery(event.id)
-      })
-    }
+    if (activeTab !== "gallery") return
+    if (events.length === 0) return
+
+    events.forEach((event) => {
+      loadGallery(event.id)
+    })
   }, [activeTab, events])
-
-  const loadEvents = () => {
-    axios
-      .get(`${API_URL}/events/`)
-      .then((response) => setEvents(response.data))
-      .catch((error) => console.log(error))
-  }
-
-  const loadBusinesses = () => {
-    axios
-      .get(`${API_URL}/businesses/`)
-      .then((response) => setBusinesses(response.data))
-      .catch((error) => console.log(error))
-  }
-
-  const loadHomeGallery = () => {
-    axios
-      .get(`${API_URL}/gallery/${HOME_EVENT_ID}`)
-      .then((response) => setGallery(response.data))
-      .catch((error) => console.log(error))
-  }
-
-  const loadGallery = async (eventId) => {
-    try {
-      const response = await axios.get(`${API_URL}/gallery/${eventId}`)
-
-      setGalleryByEvent((prev) => ({
-        ...prev,
-        [eventId]: response.data,
-      }))
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
   const logout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("email")
+
     setUserProfile(null)
     setActiveTab("home")
+    setSelectedEventDetail(null)
   }
 
   if (!userProfile) {
     if (window.location.pathname === "/reset-password") {
-      return <ResetPassword onLoginClick={() => setAuthMode("login")} />
+      return (
+        <ResetPassword
+          onLoginClick={() => setAuthMode("login")}
+        />
+      )
     }
 
     if (authMode === "verifyEmail") {
@@ -156,18 +199,21 @@ function App() {
     return (
       <Login
         onRegisterClick={() => setAuthMode("register")}
-        onLoginSuccess={(profile) => setUserProfile(profile)}
+        onLoginSuccess={(profile) => {
+          setUserProfile(profile)
+          setActiveTab("home")
+        }}
       />
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex justify-center">
-      <div className="relative w-full max-w-md min-h-screen bg-white text-slate-900 pb-24">
-        <div className="px-5 pt-8 pb-4">
-          <div className="flex items-start justify-between mb-6">
+    <div className="flex min-h-screen justify-center bg-slate-950">
+      <div className="relative min-h-screen w-full max-w-md bg-white pb-24 text-slate-900">
+        <div className="px-5 pb-4 pt-8">
+          <div className="mb-6 flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-extrabold text-blue-950 leading-tight">
+              <h1 className="text-3xl font-extrabold leading-tight text-blue-950">
                 {t.appTitle}
               </h1>
 
@@ -178,24 +224,30 @@ function App() {
 
             <div className="flex flex-col items-center gap-3">
               <button
+                type="button"
                 onClick={toggleLanguage}
-                className="bg-blue-700 text-white px-3 py-1 rounded-xl text-xs font-bold"
+                className="rounded-xl bg-blue-700 px-3 py-1 text-xs font-bold text-white"
               >
-                {language === "es" ? "🇺🇸 English" : "🇨🇴 Español"}
+                {language === "es"
+                  ? "🇺🇸 English"
+                  : "🇨🇴 Español"}
               </button>
 
-              <div className="text-3xl">🇨🇴🇦🇺</div>
+              <div className="text-3xl">
+                🇨🇴🇦🇺
+              </div>
             </div>
           </div>
 
-          {activeTab === "eventDetail" && selectedEventDetail && (
-            <EventDetail
-              event={selectedEventDetail}
-              onBack={() => setActiveTab("home")}
-              onViewMap={() => setActiveTab("map")}
-              language={language}
-            />
-          )}
+          {activeTab === "eventDetail" &&
+            selectedEventDetail && (
+              <EventDetail
+                event={selectedEventDetail}
+                onBack={() => setActiveTab("home")}
+                onViewMap={() => setActiveTab("map")}
+                language={language}
+              />
+            )}
 
           {activeTab === "map" && (
             <EventMap
@@ -246,10 +298,10 @@ function App() {
 
           {activeTab === "admin" && (
             <AdminDashboard
-              token={localStorage.getItem("token")}
+              events={events}
+              gallery={gallery}
               userProfile={userProfile}
-              language={language}
-              onBack={() => setActiveTab("profile")}
+              onEventsUpdated={loadEvents}
             />
           )}
 
@@ -268,9 +320,12 @@ function App() {
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-28 right-5 z-50 bg-green-500 hover:bg-green-600 text-white px-5 py-4 rounded-full shadow-2xl flex items-center gap-2 font-bold transition"
+          className="fixed bottom-28 right-5 z-50 flex items-center gap-2 rounded-full bg-green-500 px-5 py-4 font-bold text-white shadow-2xl transition hover:bg-green-600"
         >
-          💬 {language === "es" ? "Contáctanos" : "Contact Us"}
+          💬{" "}
+          {language === "es"
+            ? "Contáctanos"
+            : "Contact Us"}
         </a>
 
         <BottomNavigation
