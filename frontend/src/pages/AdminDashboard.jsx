@@ -13,6 +13,7 @@ function AdminDashboard({
   events = [],
   gallery = [],
   userProfile,
+  onEventsUpdated,
 }) {
   const [adminSection, setAdminSection] = useState("dashboard")
 
@@ -31,7 +32,11 @@ function AdminDashboard({
         return <Users />
 
       case "events":
-        return <EventsAdmin />
+        return (
+          <EventsAdmin
+            onEventsUpdated={onEventsUpdated}
+          />
+        )
 
       case "gallery":
         return <GalleryAdmin />

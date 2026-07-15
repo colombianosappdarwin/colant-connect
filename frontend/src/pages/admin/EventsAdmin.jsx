@@ -24,7 +24,7 @@ const emptyForm = {
   image_url: "",
 }
 
-function EventsAdmin() {
+function EventsAdmin({ onEventsUpdated }) {
   const fileInputRef = useRef(null)
 
   const [events, setEvents] = useState([])
@@ -137,20 +137,24 @@ function EventsAdmin() {
       return
     }
 
+    const wasEditing = Boolean(editingId)
+
     try {
       setSaving(true)
 
-      if (editingId) {
+      if (wasEditing) {
         await updateEvent(editingId, formData)
       } else {
         await createEvent(formData)
       }
 
       resetForm()
+
       await loadEvents()
+      await onEventsUpdated?.()
 
       alert(
-        editingId
+        wasEditing
           ? "Evento actualizado correctamente"
           : "Evento creado correctamente"
       )
@@ -192,7 +196,9 @@ function EventsAdmin() {
 
     try {
       await deleteEvent(eventId)
+
       await loadEvents()
+      await onEventsUpdated?.()
     } catch (error) {
       console.error(error)
       alert("Error eliminando el evento")
