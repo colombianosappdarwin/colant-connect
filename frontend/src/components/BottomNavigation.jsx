@@ -1,64 +1,75 @@
-import {
-  House,
-  PartyPopper,
-  Images,
-  UserRound
-} from "lucide-react"
+import { texts } from "../translations"
 
-function BottomNavigation({ activeTab, setActiveTab, language }) {
-  const labels = {
-    es: {
-      home: "Inicio",
-      events: "Festival",
-      gallery: "Galería",
-      profile: "Perfil"
-    },
-    en: {
-      home: "Home",
-      events: "Festival",
-      gallery: "Gallery",
-      profile: "Profile"
-    }
-  }
-
-  const t = labels[language] || labels.es
+function BottomNavigation({
+  activeTab,
+  setActiveTab,
+  language = "es",
+}) {
+  const t = texts[language]
 
   const items = [
-    { id: "home", label: t.home, icon: House },
-    { id: "events", label: t.events, icon: PartyPopper },
-    { id: "gallery", label: t.gallery, icon: Images },
-    { id: "profile", label: t.profile, icon: UserRound }
+    {
+      id: "home",
+      icon: "⌂",
+      label: t.home,
+    },
+    {
+      id: "events",
+      icon: "🎉",
+      label: t.events,
+    },
+    {
+      id: "gallery",
+      icon: "▣",
+      label: t.gallery,
+    },
+    {
+      id: "notifications",
+      icon: "🔔",
+      label: language === "es" ? "Avisos" : "Alerts",
+      showBadge: true,
+    },
+    {
+      id: "profile",
+      icon: "♙",
+      label: t.profile,
+    },
   ]
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 px-4">
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-200 grid grid-cols-4 py-2">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4 pb-3">
+      <div className="grid grid-cols-5 items-center rounded-[28px] border border-slate-100 bg-white px-2 py-3 shadow-2xl">
         {items.map((item) => {
-          const Icon = item.icon
           const isActive = activeTab === item.id
 
           return (
             <button
               key={item.id}
+              type="button"
               onClick={() => setActiveTab(item.id)}
-              className="flex flex-col items-center justify-center py-2 transition-all duration-300 active:scale-95"
+              className="flex min-w-0 flex-col items-center justify-center gap-1"
+              aria-label={item.label}
             >
               <div
-                className={
+                className={`relative flex h-11 w-11 items-center justify-center rounded-2xl text-xl transition ${
                   isActive
-                    ? "bg-blue-700 text-white rounded-2xl p-3 shadow-lg"
-                    : "bg-slate-100 text-slate-500 rounded-2xl p-3"
-                }
+                    ? "bg-blue-700 text-white shadow-md"
+                    : "bg-slate-50 text-slate-500"
+                }`}
               >
-                <Icon size={22} strokeWidth={isActive ? 2.8 : 2} />
+                <span>{item.icon}</span>
+
+                {item.showBadge && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white">
+                    !
+                  </span>
+                )}
               </div>
 
               <span
-                className={
-                  isActive
-                    ? "text-blue-700 font-bold text-[11px] mt-2"
-                    : "text-slate-500 text-[11px] mt-2"
-                }
+                className={`max-w-full truncate text-[10px] font-medium ${
+                  isActive ? "text-blue-700" : "text-slate-500"
+                }`}
               >
                 {item.label}
               </span>
@@ -66,7 +77,7 @@ function BottomNavigation({ activeTab, setActiveTab, language }) {
           )
         })}
       </div>
-    </div>
+    </nav>
   )
 }
 

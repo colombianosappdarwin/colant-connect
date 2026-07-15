@@ -185,22 +185,6 @@ function App() {
               </button>
 
               <div className="text-3xl">🇨🇴🇦🇺</div>
-
-              <button
-                onClick={() => setActiveTab("notifications")}
-                className="relative text-3xl"
-                aria-label={
-                  language === "es"
-                    ? "Abrir notificaciones"
-                    : "Open notifications"
-                }
-              >
-                🔔
-
-                <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
-                  !
-                </span>
-              </button>
             </div>
           </div>
 
