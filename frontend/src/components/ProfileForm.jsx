@@ -41,6 +41,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -55,28 +56,29 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
   }
 
   const handlePhotoClick = () => {
-    fileInputRef.current.click()
+    fileInputRef.current?.click()
   }
 
   const handlePhotoChange = async (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files?.[0]
 
     if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      alert("Selecciona una imagen válida.")
+      return
+    }
 
     try {
       setUploadingPhoto(true)
 
-      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
-
-      if (!cloudName || !uploadPreset) {
-        alert("Faltan las variables de Cloudinary en Railway.")
-        return
-      }
+      const cloudName = "dtlmi9fgx"
+      const uploadPreset = "colant_profiles"
 
       const uploadData = new FormData()
       uploadData.append("file", file)
       uploadData.append("upload_preset", uploadPreset)
+      uploadData.append("folder", "colant/profile-photos")
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -88,6 +90,17 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
 
       const data = await response.json()
 
+      if (!response.ok) {
+        console.error("Cloudinary error:", data)
+
+        alert(
+          data?.error?.message ||
+            "No fue posible subir la foto a Cloudinary."
+        )
+
+        return
+      }
+
       if (!data.secure_url) {
         alert("Cloudinary no devolvió la URL de la imagen.")
         return
@@ -98,10 +111,14 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
         profile_photo_url: data.secure_url,
       }))
     } catch (error) {
-      console.log(error)
+      console.error(error)
       alert("Error subiendo la foto.")
     } finally {
       setUploadingPhoto(false)
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
@@ -118,7 +135,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
       alert("Perfil actualizado correctamente")
       onBack()
     } catch (error) {
-      console.log(error)
+      console.error(error)
       alert("Error al guardar los cambios del perfil")
     } finally {
       setSaving(false)
@@ -126,34 +143,41 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
   }
 
   return (
-    <div className="bg-white min-h-[calc(100vh-110px)]">
-      <div className="bg-slate-950 text-white px-5 pt-8 pb-20 rounded-b-[28px]">
+    <div className="min-h-[calc(100vh-110px)] bg-white">
+      <div className="rounded-b-[28px] bg-slate-950 px-5 pb-20 pt-8 text-white">
         <div className="flex items-center justify-between">
-          <button onClick={onBack} className="text-3xl">
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-3xl"
+          >
             ←
           </button>
 
-          <h2 className="font-bold text-xl">Editar Perfil</h2>
+          <h2 className="text-xl font-bold">
+            Editar Perfil
+          </h2>
 
           <button
             type="button"
             onClick={handleSubmit}
-            className="text-red-500 font-bold text-sm"
+            disabled={saving || uploadingPhoto}
+            className="text-sm font-bold text-red-500 disabled:opacity-60"
           >
             GUARDAR
           </button>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="mt-8 flex justify-center">
           <div className="relative">
             {formData.profile_photo_url ? (
               <img
                 src={formData.profile_photo_url}
                 alt="Profile"
-                className="w-28 h-28 rounded-full object-cover border-4 border-white/20"
+                className="h-28 w-28 rounded-full border-4 border-white/20 object-cover"
               />
             ) : (
-              <div className="w-28 h-28 rounded-full bg-white/10 flex items-center justify-center text-6xl">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white/10 text-6xl">
                 👤
               </div>
             )}
@@ -161,7 +185,8 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             <button
               type="button"
               onClick={handlePhotoClick}
-              className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
+              disabled={uploadingPhoto}
+              className="absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg disabled:opacity-60"
             >
               {uploadingPhoto ? "..." : "📷"}
             </button>
@@ -177,33 +202,38 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="-mt-10 px-5 pb-8">
-        <div className="bg-white rounded-[28px] shadow-lg border border-slate-100 p-5 space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="-mt-10 px-5 pb-8"
+      >
+        <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-lg">
           <div>
-            <label className="text-sm text-slate-500 font-semibold">
+            <label className="text-sm font-semibold text-slate-500">
               Nombre
             </label>
+
             <input
               name="full_name"
               value={formData.full_name}
               onChange={handleChange}
-              className="w-full mt-1 p-4 rounded-2xl border border-slate-200"
+              className="mt-1 w-full rounded-2xl border border-slate-200 p-4"
             />
           </div>
 
           <div>
-            <label className="text-sm text-slate-500 font-semibold">
+            <label className="text-sm font-semibold text-slate-500">
               Tipo de sexo
             </label>
 
-            <div className="grid grid-cols-2 mt-2 border rounded-2xl overflow-hidden">
+            <div className="mt-2 grid grid-cols-2 overflow-hidden rounded-2xl border">
               <button
                 type="button"
                 onClick={() => handleGenderChange("M")}
                 className={
-                  formData.gender === "M" || formData.gender === "Masculino"
-                    ? "bg-red-500 text-white py-3 font-bold"
-                    : "bg-white text-slate-700 py-3 font-bold"
+                  formData.gender === "M" ||
+                  formData.gender === "Masculino"
+                    ? "bg-red-500 py-3 font-bold text-white"
+                    : "bg-white py-3 font-bold text-slate-700"
                 }
               >
                 M
@@ -213,9 +243,10 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                 type="button"
                 onClick={() => handleGenderChange("F")}
                 className={
-                  formData.gender === "F" || formData.gender === "Femenino"
-                    ? "bg-red-500 text-white py-3 font-bold"
-                    : "bg-white text-slate-700 py-3 font-bold"
+                  formData.gender === "F" ||
+                  formData.gender === "Femenino"
+                    ? "bg-red-500 py-3 font-bold text-white"
+                    : "bg-white py-3 font-bold text-slate-700"
                 }
               >
                 F
@@ -234,7 +265,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             ["visa_type", "Tipo de Visa", "text"],
           ].map(([name, label, type]) => (
             <div key={name}>
-              <label className="text-sm text-slate-500 font-semibold">
+              <label className="text-sm font-semibold text-slate-500">
                 {label}
               </label>
 
@@ -243,7 +274,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                 type={type}
                 value={formData[name]}
                 onChange={handleChange}
-                className="w-full mt-1 p-4 rounded-2xl border border-slate-200"
+                className="mt-1 w-full rounded-2xl border border-slate-200 p-4"
               />
             </div>
           ))}
@@ -251,9 +282,13 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
           <button
             type="submit"
             disabled={saving || uploadingPhoto}
-            className="w-full bg-red-500 text-white py-4 rounded-2xl font-bold mt-4 disabled:opacity-60"
+            className="mt-4 w-full rounded-2xl bg-red-500 py-4 font-bold text-white disabled:opacity-60"
           >
-            {saving ? "Guardando..." : "Guardar cambios"}
+            {saving
+              ? "Guardando..."
+              : uploadingPhoto
+                ? "Subiendo foto..."
+                : "Guardar cambios"}
           </button>
         </div>
       </form>
