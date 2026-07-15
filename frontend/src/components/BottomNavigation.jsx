@@ -1,3 +1,11 @@
+import {
+  House,
+  CalendarDays,
+  Images,
+  Bell,
+  CircleUser,
+} from "lucide-react"
+
 import { texts } from "../translations"
 
 function BottomNavigation({
@@ -10,28 +18,28 @@ function BottomNavigation({
   const items = [
     {
       id: "home",
-      icon: "⌂",
+      icon: House,
       label: t.home,
     },
     {
       id: "events",
-      icon: "🎉",
+      icon: CalendarDays,
       label: t.events,
     },
     {
       id: "gallery",
-      icon: "▣",
+      icon: Images,
       label: t.gallery,
     },
     {
       id: "notifications",
-      icon: "🔔",
+      icon: Bell,
       label: language === "es" ? "Avisos" : "Alerts",
       showBadge: true,
     },
     {
       id: "profile",
-      icon: "♙",
+      icon: CircleUser,
       label: t.profile,
     },
   ]
@@ -41,6 +49,7 @@ function BottomNavigation({
       <div className="grid grid-cols-5 items-center rounded-[28px] border border-slate-100 bg-white px-2 py-3 shadow-2xl">
         {items.map((item) => {
           const isActive = activeTab === item.id
+          const Icon = item.icon
 
           return (
             <button
@@ -51,13 +60,13 @@ function BottomNavigation({
               aria-label={item.label}
             >
               <div
-                className={`relative flex h-11 w-11 items-center justify-center rounded-2xl text-xl transition ${
+                className={`relative flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300 ${
                   isActive
-                    ? "bg-blue-700 text-white shadow-md"
+                    ? "bg-blue-700 text-white shadow-lg"
                     : "bg-slate-50 text-slate-500"
                 }`}
               >
-                <span>{item.icon}</span>
+                <Icon size={22} strokeWidth={2.2} />
 
                 {item.showBadge && (
                   <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white">
