@@ -165,7 +165,7 @@ function App() {
     <div className="min-h-screen bg-slate-950 flex justify-center">
       <div className="relative w-full max-w-md min-h-screen bg-white text-slate-900 pb-24">
         <div className="px-5 pt-8 pb-4">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-3xl font-extrabold text-blue-950 leading-tight">
                 {t.appTitle}
@@ -176,7 +176,7 @@ function App() {
               </h2>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-col items-center gap-3">
               <button
                 onClick={toggleLanguage}
                 className="bg-blue-700 text-white px-3 py-1 rounded-xl text-xs font-bold"
@@ -184,17 +184,23 @@ function App() {
                 {language === "es" ? "🇺🇸 English" : "🇨🇴 Español"}
               </button>
 
+              <div className="text-3xl">🇨🇴🇦🇺</div>
+
               <button
                 onClick={() => setActiveTab("notifications")}
                 className="relative text-3xl"
+                aria-label={
+                  language === "es"
+                    ? "Abrir notificaciones"
+                    : "Open notifications"
+                }
               >
                 🔔
-                <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full px-1.5">
+
+                <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
                   !
                 </span>
               </button>
-
-              <div className="text-3xl">🇨🇴🇦🇺</div>
             </div>
           </div>
 
