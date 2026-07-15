@@ -1,60 +1,170 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react"
+import {
+  CalendarDays,
+  Camera,
+  Edit3,
+  MapPin,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react"
+
 import {
   getEvents,
   createEvent,
   updateEvent,
   deleteEvent,
-} from "../../services/eventService";
+} from "../../services/eventService"
 
 const emptyForm = {
   title: "",
   description: "",
   location: "",
   event_date: "",
-};
+  image_url: "",
+}
 
 function EventsAdmin() {
-  const [events, setEvents] = useState([]);
-  const [formData, setFormData] = useState(emptyForm);
-  const [editingId, setEditingId] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const fileInputRef = useRef(null)
+
+  const [events, setEvents] = useState([])
+  const [formData, setFormData] = useState(emptyForm)
+  const [editingId, setEditingId] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const loadEvents = async () => {
     try {
-      const data = await getEvents();
-      setEvents(data);
+      const data = await getEvents()
+      setEvents(Array.isArray(data) ? data : [])
     } catch (error) {
-      console.log(error);
-      alert("Error loading events");
+      console.error(error)
+      alert("Error cargando los eventos")
     }
-  };
+  }
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    loadEvents()
+  }, [])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const resetForm = () => {
+    setFormData(emptyForm)
+    setEditingId(null)
+    setShowForm(false)
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }))
+  }
+
+  const handleImageClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImageChange = async (event) => {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      alert("Selecciona una imagen válida.")
+      return
+    }
 
     try {
-      if (editingId) {
-        await updateEvent(editingId, formData);
-      } else {
-        await createEvent(formData);
+      setUploadingImage(true)
+
+      const cloudName = "dtlmi9fgx"
+      const uploadPreset = "colant_profiles"
+
+      const uploadData = new FormData()
+      uploadData.append("file", file)
+      uploadData.append("upload_preset", uploadPreset)
+      uploadData.append("folder", "colant/events")
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: uploadData,
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok || !data.secure_url) {
+        console.error("Cloudinary error:", data)
+
+        alert(
+          data?.error?.message ||
+            "No fue posible subir la imagen del evento."
+        )
+
+        return
       }
 
-      setFormData(emptyForm);
-      setEditingId(null);
-      setShowForm(false);
-      loadEvents();
+      setFormData((previous) => ({
+        ...previous,
+        image_url: data.secure_url,
+      }))
     } catch (error) {
-      console.log(error);
-      alert("Error saving event");
+      console.error(error)
+      alert("Error subiendo la imagen.")
+    } finally {
+      setUploadingImage(false)
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
-  };
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    if (!formData.image_url) {
+      alert("Selecciona la imagen principal del evento.")
+      return
+    }
+
+    try {
+      setSaving(true)
+
+      if (editingId) {
+        await updateEvent(editingId, formData)
+      } else {
+        await createEvent(formData)
+      }
+
+      resetForm()
+      await loadEvents()
+
+      alert(
+        editingId
+          ? "Evento actualizado correctamente"
+          : "Evento creado correctamente"
+      )
+    } catch (error) {
+      console.error(error)
+      alert("Error guardando el evento")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleEdit = (event) => {
-    setEditingId(event.id);
+    setEditingId(event.id)
+
     setFormData({
       title: event.title || "",
       description: event.description || "",
@@ -62,153 +172,342 @@ function EventsAdmin() {
       event_date: event.event_date
         ? event.event_date.slice(0, 16)
         : "",
-    });
-    setShowForm(true);
-  };
+      image_url: event.image_url || "",
+    })
+
+    setShowForm(true)
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
+  }
 
   const handleDelete = async (eventId) => {
-    const confirmDelete = confirm("Delete this event?");
+    const confirmDelete = window.confirm(
+      "¿Quieres eliminar este evento?"
+    )
 
-    if (!confirmDelete) return;
+    if (!confirmDelete) return
 
     try {
-      await deleteEvent(eventId);
-      loadEvents();
+      await deleteEvent(eventId)
+      await loadEvents()
     } catch (error) {
-      console.log(error);
-      alert("Error deleting event");
+      console.error(error)
+      alert("Error eliminando el evento")
     }
-  };
+  }
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "Sin fecha"
+
+    const date = new Date(dateValue)
+
+    if (Number.isNaN(date.getTime())) {
+      return dateValue
+    }
+
+    return new Intl.DateTimeFormat("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date)
+  }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8 gap-4">
+    <div className="space-y-6">
+      <section className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-blue-950">
-            Events
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            Contenido
+          </p>
+
+          <h1 className="mt-1 text-3xl font-extrabold text-slate-950">
+            Eventos
           </h1>
 
-          <p className="text-slate-600 mt-2">
-            Create, edit and manage community events.
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Crea, edita y publica los eventos de la comunidad.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={() => {
-            setFormData(emptyForm);
-            setEditingId(null);
-            setShowForm(!showForm);
+            if (showForm) {
+              resetForm()
+            } else {
+              setFormData(emptyForm)
+              setEditingId(null)
+              setShowForm(true)
+            }
           }}
-          className="bg-blue-700 hover:bg-blue-800 text-white px-5 py-3 rounded-xl font-bold"
+          className="flex shrink-0 items-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800"
         >
-          {showForm ? "Cancel" : "+ Create Event"}
+          {showForm ? (
+            <>
+              <X size={18} />
+              Cancelar
+            </>
+          ) : (
+            <>
+              <Plus size={18} />
+              Crear evento
+            </>
+          )}
         </button>
-      </div>
+      </section>
 
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-3xl shadow-lg border border-slate-100 p-5 mb-6 space-y-3"
+          className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
         >
-          <input
-            type="text"
-            placeholder="Event title"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            className="w-full p-3 border rounded-xl bg-white"
-            required
-          />
+          <div className="border-b border-slate-200 px-5 py-4">
+            <h2 className="text-lg font-extrabold text-slate-950">
+              {editingId ? "Editar evento" : "Nuevo evento"}
+            </h2>
 
-          <textarea
-            placeholder="Description"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            className="w-full p-3 border rounded-xl bg-white min-h-28"
-            required
-          />
+            <p className="mt-1 text-sm text-slate-500">
+              Completa la información que verá la comunidad.
+            </p>
+          </div>
 
-          <input
-            type="text"
-            placeholder="Location"
-            value={formData.location}
-            onChange={(e) =>
-              setFormData({ ...formData, location: e.target.value })
-            }
-            className="w-full p-3 border rounded-xl bg-white"
-            required
-          />
+          <div className="space-y-5 p-5">
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Imagen principal
+              </label>
 
-          <input
-            type="datetime-local"
-            value={formData.event_date}
-            onChange={(e) =>
-              setFormData({ ...formData, event_date: e.target.value })
-            }
-            className="w-full p-3 border rounded-xl bg-white"
-            required
-          />
+              {formData.image_url ? (
+                <div className="relative mt-2 overflow-hidden rounded-2xl border border-slate-200">
+                  <img
+                    src={formData.image_url}
+                    alt="Imagen del evento"
+                    className="h-52 w-full object-cover"
+                  />
 
-          <button
-            type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold"
-          >
-            {editingId ? "Update Event" : "Save Event"}
-          </button>
+                  <button
+                    type="button"
+                    onClick={handleImageClick}
+                    disabled={uploadingImage}
+                    className="absolute bottom-3 right-3 flex items-center gap-2 rounded-xl bg-black/75 px-4 py-2 text-sm font-bold text-white backdrop-blur disabled:opacity-60"
+                  >
+                    <Camera size={17} />
+                    Cambiar imagen
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleImageClick}
+                  disabled={uploadingImage}
+                  className="mt-2 flex h-44 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-slate-400 hover:bg-slate-100 disabled:opacity-60"
+                >
+                  <Camera size={30} />
+
+                  <span className="mt-3 font-bold text-slate-700">
+                    {uploadingImage
+                      ? "Subiendo imagen..."
+                      : "Seleccionar imagen"}
+                  </span>
+
+                  <span className="mt-1 text-xs">
+                    JPG, PNG o WEBP
+                  </span>
+                </button>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Título del evento
+              </label>
+
+              <input
+                name="title"
+                type="text"
+                placeholder="Ejemplo: Colombia Florece"
+                value={formData.title}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Descripción
+              </label>
+
+              <textarea
+                name="description"
+                placeholder="Describe brevemente el evento"
+                value={formData.description}
+                onChange={handleChange}
+                className="mt-2 min-h-32 w-full resize-none rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Ubicación
+              </label>
+
+              <div className="relative mt-2">
+                <MapPin
+                  size={19}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+
+                <input
+                  name="location"
+                  type="text"
+                  placeholder="Ejemplo: Darwin Waterfront"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 py-4 pl-12 pr-4 outline-none transition focus:border-slate-400"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-bold text-slate-700">
+                Fecha y hora
+              </label>
+
+              <div className="relative mt-2">
+                <CalendarDays
+                  size={19}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+
+                <input
+                  name="event_date"
+                  type="datetime-local"
+                  value={formData.event_date}
+                  onChange={handleChange}
+                  className="w-full rounded-2xl border border-slate-200 py-4 pl-12 pr-4 outline-none transition focus:border-slate-400"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving || uploadingImage}
+              className="w-full rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
+            >
+              {saving
+                ? "Guardando..."
+                : editingId
+                  ? "Actualizar evento"
+                  : "Publicar evento"}
+            </button>
+          </div>
         </form>
       )}
 
-      <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-        <div className="space-y-4 p-4">
-          {events.length === 0 && (
-            <p className="text-slate-500 text-sm">
-              No events created yet.
-            </p>
-          )}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-xl font-extrabold text-slate-950">
+            Eventos publicados
+          </h2>
 
-          {events.map((event) => (
-            <div
-              key={event.id}
-              className="border border-slate-100 rounded-2xl p-4"
-            >
-              <h2 className="font-bold text-blue-950 text-lg">
-                {event.title}
-              </h2>
-
-              <p className="text-sm text-slate-600 mt-1">
-                {event.location}
-              </p>
-
-              <p className="text-sm text-slate-500 mt-1">
-                {event.event_date
-                  ? new Date(event.event_date).toLocaleString()
-                  : "No date"}
-              </p>
-
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => handleEdit(event)}
-                  className="bg-yellow-500 text-white px-4 py-2 rounded-xl font-bold"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(event.id)}
-                  className="bg-red-600 text-white px-4 py-2 rounded-xl font-bold"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+          <p className="mt-1 text-sm text-slate-500">
+            {events.length} evento{events.length === 1 ? "" : "s"}
+          </p>
         </div>
-      </div>
+
+        {events.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+            <CalendarDays
+              size={30}
+              className="mx-auto text-slate-400"
+            />
+
+            <p className="mt-3 font-bold text-slate-800">
+              No hay eventos creados
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <article
+                key={event.id}
+                className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+              >
+                {event.image_url && (
+                  <img
+                    src={event.image_url}
+                    alt={event.title}
+                    className="h-44 w-full object-cover"
+                  />
+                )}
+
+                <div className="p-5">
+                  <h3 className="text-xl font-extrabold text-slate-950">
+                    {event.title}
+                  </h3>
+
+                  <div className="mt-3 space-y-2 text-sm text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={16} />
+                      <span>{event.location}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <CalendarDays size={16} />
+                      <span>{formatDate(event.event_date)}</span>
+                    </div>
+                  </div>
+
+                  {event.description && (
+                    <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600">
+                      {event.description}
+                    </p>
+                  )}
+
+                  <div className="mt-5 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(event)}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 font-bold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <Edit3 size={17} />
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(event.id)}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-bold text-white transition hover:bg-red-700"
+                    >
+                      <Trash2 size={17} />
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
-  );
+  )
 }
 
-export default EventsAdmin;
+export default EventsAdmin
