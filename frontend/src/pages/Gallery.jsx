@@ -176,21 +176,30 @@ function Gallery({
     location: "Darwin Waterfront",
   }
 
+  const visibleEvents =
+    events.length > 0 ? events : [fallbackEvent]
+
   const hasRealGallery = Object.values(galleryByEvent).some(
     (photos) => Array.isArray(photos) && photos.length > 0
   )
 
-  const visibleEvents =
-    events.length > 0 ? events : [fallbackEvent]
-
-  const getPhotos = (event) => {
-    const eventPhotos = galleryByEvent[event.id]
+  const getPhotos = (event, index) => {
+    const eventPhotos =
+      galleryByEvent[event.id] ||
+      galleryByEvent[String(event.id)]
 
     if (Array.isArray(eventPhotos) && eventPhotos.length > 0) {
       return eventPhotos
     }
 
-    if (!hasRealGallery && event.id === fallbackEvent.id) {
+    const isColombiaFlorece = event.title
+      ?.toLowerCase()
+      .includes("colombia florece")
+
+    if (
+      !hasRealGallery &&
+      (isColombiaFlorece || index === 0)
+    ) {
       return FALLBACK_GALLERY
     }
 
@@ -198,9 +207,9 @@ function Gallery({
   }
 
   const eventsWithPhotos = visibleEvents
-    .map((event) => ({
+    .map((event, index) => ({
       ...event,
-      photos: getPhotos(event),
+      photos: getPhotos(event, index),
     }))
     .filter((event) => event.photos.length > 0)
 
@@ -228,8 +237,9 @@ function Gallery({
     setSelectedIndex(index)
   }
 
-  const closeEvent = () => {
-    setOpenedEvent(null)
+  const closeViewer = () => {
+    setSelectedIndex(null)
+    setSelectedImages([])
   }
 
   if (openedEvent) {
@@ -238,11 +248,14 @@ function Gallery({
         <div className="pb-28">
           <button
             type="button"
-            onClick={closeEvent}
+            onClick={() => setOpenedEvent(null)}
             className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-slate-950"
           >
             <ChevronLeft size={19} />
-            {language === "es" ? "Volver a eventos" : "Back to events"}
+
+            {language === "es"
+              ? "Volver a eventos"
+              : "Back to events"}
           </button>
 
           <div className="mb-6">
@@ -254,7 +267,9 @@ function Gallery({
               {openedEvent.event_date && (
                 <div className="flex items-center gap-1.5">
                   <CalendarDays size={16} />
-                  <span>{formatDate(openedEvent.event_date)}</span>
+                  <span>
+                    {formatDate(openedEvent.event_date)}
+                  </span>
                 </div>
               )}
 
@@ -275,17 +290,15 @@ function Gallery({
           <div className="grid grid-cols-2 gap-3">
             {openedEvent.photos.map((photo, index) => (
               <button
-                key={photo.id ?? `${openedEvent.id}-${index}`}
+                key={
+                  photo.id ??
+                  `${openedEvent.id}-${index}`
+                }
                 type="button"
                 onClick={() =>
                   openImage(openedEvent.photos, index)
                 }
                 className="overflow-hidden rounded-2xl bg-slate-100 shadow-sm"
-                aria-label={
-                  language === "es"
-                    ? `Abrir foto ${index + 1}`
-                    : `Open photo ${index + 1}`
-                }
               >
                 <img
                   src={photo.image_url}
@@ -302,10 +315,7 @@ function Gallery({
           <ImageViewer
             images={selectedImages}
             currentIndex={selectedIndex}
-            onClose={() => {
-              setSelectedIndex(null)
-              setSelectedImages([])
-            }}
+            onClose={closeViewer}
             onNext={() =>
               setSelectedIndex((previous) =>
                 previous === selectedImages.length - 1
@@ -363,7 +373,6 @@ function Gallery({
           <div className="space-y-5">
             {eventsWithPhotos.map((event) => {
               const previewPhotos = event.photos.slice(0, 4)
-              const remainingPhotos = event.photos.length - 3
 
               return (
                 <article
@@ -394,6 +403,7 @@ function Gallery({
                         {event.event_date && (
                           <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                             <CalendarDays size={15} />
+
                             <span>
                               {formatDate(event.event_date)}
                             </span>
@@ -403,6 +413,7 @@ function Gallery({
                         {event.location && (
                           <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                             <MapPin size={15} />
+
                             <span className="truncate">
                               {event.location}
                             </span>
@@ -427,7 +438,11 @@ function Gallery({
                     <div className="mt-4 grid grid-cols-4 gap-2">
                       {previewPhotos.map((photo, index) => {
                         const isLastPreview =
-                          index === 3 && event.photos.length > 4
+                          index === 3 &&
+                          event.photos.length > 4
+
+                        const remainingPhotos =
+                          event.photos.length - 3
 
                         return (
                           <div
@@ -467,10 +482,7 @@ function Gallery({
         <ImageViewer
           images={selectedImages}
           currentIndex={selectedIndex}
-          onClose={() => {
-            setSelectedIndex(null)
-            setSelectedImages([])
-          }}
+          onClose={closeViewer}
           onNext={() =>
             setSelectedIndex((previous) =>
               previous === selectedImages.length - 1
