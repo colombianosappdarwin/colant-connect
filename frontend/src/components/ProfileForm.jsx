@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react"
+import Select from "react-select"
+import { Country, City } from "country-state-city"
 import { updateProfile } from "../services/profileService"
 
 function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
@@ -21,22 +23,40 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
+  const countries = Country.getAllCountries().map((country) => ({
+    value: country.isoCode,
+    label: country.name,
+  }))
+
+  const cities = formData.country_origin
+    ? City.getCitiesOfCountry(formData.country_origin).map((city) => ({
+        value: city.name,
+        label: city.name,
+      }))
+    : []
+
   useEffect(() => {
-    if (userProfile) {
-      setFormData({
-        full_name: userProfile.full_name || "",
-        gender: userProfile.gender || "",
-        email: userProfile.email || "",
-        birth_date: userProfile.birth_date || "",
-        country_origin: userProfile.country_origin || "",
-        city_origin: userProfile.city_origin || "",
-        phone: userProfile.phone || "",
-        arrival_date: userProfile.arrival_date || "",
-        industry: userProfile.industry || "",
-        visa_type: userProfile.visa_type || "",
-        profile_photo_url: userProfile.profile_photo_url || "",
-      })
-    }
+    if (!userProfile) return
+
+    const savedCountry = Country.getAllCountries().find(
+      (country) =>
+        country.isoCode === userProfile.country_origin ||
+        country.name === userProfile.country_origin
+    )
+
+    setFormData({
+      full_name: userProfile.full_name || "",
+      gender: userProfile.gender || "",
+      email: userProfile.email || "",
+      birth_date: userProfile.birth_date || "",
+      country_origin: savedCountry?.isoCode || "",
+      city_origin: userProfile.city_origin || "",
+      phone: userProfile.phone || "",
+      arrival_date: userProfile.arrival_date || "",
+      industry: userProfile.industry || "",
+      visa_type: userProfile.visa_type || "",
+      profile_photo_url: userProfile.profile_photo_url || "",
+    })
   }, [userProfile])
 
   const handleChange = (e) => {
@@ -52,6 +72,21 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
     setFormData((prev) => ({
       ...prev,
       gender: genderValue,
+    }))
+  }
+
+  const handleCountryChange = (selectedCountry) => {
+    setFormData((prev) => ({
+      ...prev,
+      country_origin: selectedCountry?.value || "",
+      city_origin: "",
+    }))
+  }
+
+  const handleCityChange = (selectedCity) => {
+    setFormData((prev) => ({
+      ...prev,
+      city_origin: selectedCity?.value || "",
     }))
   }
 
@@ -125,10 +160,30 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!formData.country_origin) {
+      alert("Selecciona un país.")
+      return
+    }
+
+    if (!formData.city_origin) {
+      alert("Selecciona una ciudad.")
+      return
+    }
+
     try {
       setSaving(true)
 
-      const updatedProfile = await updateProfile(formData)
+      const selectedCountry = Country.getCountryByCode(
+        formData.country_origin
+      )
+
+      const profileData = {
+        ...formData,
+        country_origin:
+          selectedCountry?.name || formData.country_origin,
+      }
+
+      const updatedProfile = await updateProfile(profileData)
 
       onProfileUpdated(updatedProfile)
 
@@ -140,6 +195,46 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
     } finally {
       setSaving(false)
     }
+  }
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: "58px",
+      borderRadius: "16px",
+      borderColor: state.isFocused ? "#94a3b8" : "#e2e8f0",
+      boxShadow: "none",
+      paddingLeft: "6px",
+      paddingRight: "6px",
+      cursor: "pointer",
+      "&:hover": {
+        borderColor: "#94a3b8",
+      },
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#94a3b8",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: "#0f172a",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 100,
+      borderRadius: "16px",
+      overflow: "hidden",
+    }),
+    option: (base, state) => ({
+      ...base,
+      cursor: "pointer",
+      backgroundColor: state.isSelected
+        ? "#0f172a"
+        : state.isFocused
+          ? "#f1f5f9"
+          : "#ffffff",
+      color: state.isSelected ? "#ffffff" : "#0f172a",
+    }),
   }
 
   return (
@@ -216,7 +311,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
               name="full_name"
               value={formData.full_name}
               onChange={handleChange}
-              className="mt-1 w-full rounded-2xl border border-slate-200 p-4"
+              className="mt-1 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
             />
           </div>
 
@@ -225,14 +320,14 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
               Tipo de sexo
             </label>
 
-            <div className="mt-2 grid grid-cols-2 overflow-hidden rounded-2xl border">
+            <div className="mt-2 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200">
               <button
                 type="button"
                 onClick={() => handleGenderChange("M")}
                 className={
                   formData.gender === "M" ||
                   formData.gender === "Masculino"
-                    ? "bg-red-500 py-3 font-bold text-white"
+                    ? "bg-slate-950 py-3 font-bold text-white"
                     : "bg-white py-3 font-bold text-slate-700"
                 }
               >
@@ -245,7 +340,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                 className={
                   formData.gender === "F" ||
                   formData.gender === "Femenino"
-                    ? "bg-red-500 py-3 font-bold text-white"
+                    ? "bg-slate-950 py-3 font-bold text-white"
                     : "bg-white py-3 font-bold text-slate-700"
                 }
               >
@@ -254,11 +349,86 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             </div>
           </div>
 
+          <div>
+            <label className="text-sm font-semibold text-slate-500">
+              Email
+            </label>
+
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-slate-500">
+              Fecha de nacimiento
+            </label>
+
+            <input
+              name="birth_date"
+              type="date"
+              value={formData.birth_date}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-slate-500">
+              País
+            </label>
+
+            <div className="mt-1">
+              <Select
+                options={countries}
+                value={
+                  countries.find(
+                    (country) =>
+                      country.value === formData.country_origin
+                  ) || null
+                }
+                onChange={handleCountryChange}
+                placeholder="Selecciona un país"
+                isSearchable
+                styles={selectStyles}
+                noOptionsMessage={() => "No se encontraron países"}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-slate-500">
+              Ciudad de origen
+            </label>
+
+            <div className="mt-1">
+              <Select
+                options={cities}
+                value={
+                  cities.find(
+                    (city) =>
+                      city.value === formData.city_origin
+                  ) || null
+                }
+                onChange={handleCityChange}
+                placeholder={
+                  formData.country_origin
+                    ? "Selecciona una ciudad"
+                    : "Primero selecciona un país"
+                }
+                isDisabled={!formData.country_origin}
+                isSearchable
+                styles={selectStyles}
+                noOptionsMessage={() => "No se encontraron ciudades"}
+              />
+            </div>
+          </div>
+
           {[
-            ["email", "Email", "email"],
-            ["birth_date", "Fecha de nacimiento", "date"],
-            ["country_origin", "País", "text"],
-            ["city_origin", "Ciudad de origen", "text"],
             ["phone", "Número de celular", "text"],
             ["arrival_date", "Fecha de llegada a Darwin", "date"],
             ["industry", "¿En qué industria trabajan?", "text"],
@@ -274,7 +444,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                 type={type}
                 value={formData[name]}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-2xl border border-slate-200 p-4"
+                className="mt-1 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
               />
             </div>
           ))}
@@ -282,7 +452,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
           <button
             type="submit"
             disabled={saving || uploadingPhoto}
-            className="mt-4 w-full rounded-2xl bg-red-500 py-4 font-bold text-white disabled:opacity-60"
+            className="mt-4 w-full rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
           >
             {saving
               ? "Guardando..."
