@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import axios from "axios"
 import {
-  CalendarDays,
   Camera,
+  FolderOpen,
   Images,
+  Plus,
   Trash2,
   Upload,
   X,
@@ -17,14 +18,21 @@ const UPLOAD_PRESET = "colant_profiles"
 function GalleryAdmin() {
   const fileInputRef = useRef(null)
 
-  const [events, setEvents] = useState([])
-  const [selectedEvent, setSelectedEvent] = useState("")
-  const [selectedFiles, setSelectedFiles] = useState([])
-  const [previews, setPreviews] = useState([])
+  const [albums, setAlbums] = useState([])
+  const [selectedAlbum, setSelectedAlbum] = useState("")
   const [gallery, setGallery] = useState([])
 
+  const [albumTitle, setAlbumTitle] = useState("")
+  const [albumDescription, setAlbumDescription] = useState("")
+
+  const [selectedFiles, setSelectedFiles] = useState([])
+  const [previews, setPreviews] = useState([])
+
+  const [loadingAlbums, setLoadingAlbums] = useState(false)
   const [loadingGallery, setLoadingGallery] = useState(false)
+  const [creatingAlbum, setCreatingAlbum] = useState(false)
   const [uploading, setUploading] = useState(false)
+
   const [uploadProgress, setUploadProgress] = useState({
     current: 0,
     total: 0,
@@ -32,45 +40,46 @@ function GalleryAdmin() {
 
   const token = localStorage.getItem("token")
 
-  const sortedEvents = useMemo(() => {
-    return [...events].sort((first, second) => {
-      const firstDate = first.event_date
-        ? new Date(first.event_date).getTime()
-        : Number.MAX_SAFE_INTEGER
-
-      const secondDate = second.event_date
-        ? new Date(second.event_date).getTime()
-        : Number.MAX_SAFE_INTEGER
-
-      return firstDate - secondDate
-    })
-  }, [events])
-
-  const selectedEventData = events.find(
-    (event) => String(event.id) === String(selectedEvent)
+  const selectedAlbumData = albums.find(
+    (album) => String(album.id) === String(selectedAlbum)
   )
 
-  const loadEvents = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/events/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+  const authHeaders = {
+    Authorization: `Bearer ${token}`,
+  }
 
-      setEvents(
+  const loadAlbums = async () => {
+    try {
+      setLoadingAlbums(true)
+
+      const response = await axios.get(
+        `${API_URL}/gallery/albums`,
+        {
+          headers: authHeaders,
+        }
+      )
+
+      setAlbums(
         Array.isArray(response.data)
           ? response.data
           : []
       )
     } catch (error) {
-      console.error("Error loading events:", error)
-      alert("Error cargando los eventos")
+      console.error("Error loading albums:", error)
+
+      setAlbums([])
+
+      alert(
+        error?.response?.data?.detail ||
+          "Error cargando los álbumes"
+      )
+    } finally {
+      setLoadingAlbums(false)
     }
   }
 
-  const loadGallery = async () => {
-    if (!selectedEvent) {
+  const loadGallery = async (albumId = selectedAlbum) => {
+    if (!albumId) {
       setGallery([])
       return
     }
@@ -79,7 +88,10 @@ function GalleryAdmin() {
       setLoadingGallery(true)
 
       const response = await axios.get(
-        `${API_URL}/gallery/${selectedEvent}`
+        `${API_URL}/gallery/albums/${albumId}/photos`,
+        {
+          headers: authHeaders,
+        }
       )
 
       setGallery(
@@ -88,22 +100,32 @@ function GalleryAdmin() {
           : []
       )
     } catch (error) {
-      console.error("Error loading gallery:", error)
+      console.error("Error loading album photos:", error)
+
       setGallery([])
-      alert("Error cargando las fotografías")
+
+      alert(
+        error?.response?.data?.detail ||
+          "Error cargando las fotografías"
+      )
     } finally {
       setLoadingGallery(false)
     }
   }
 
   useEffect(() => {
-    loadEvents()
+    loadAlbums()
   }, [])
 
   useEffect(() => {
-    loadGallery()
+    if (selectedAlbum) {
+      loadGallery(selectedAlbum)
+    } else {
+      setGallery([])
+    }
+
     clearSelectedFiles()
-  }, [selectedEvent])
+  }, [selectedAlbum])
 
   useEffect(() => {
     return () => {
@@ -113,6 +135,89 @@ function GalleryAdmin() {
     }
   }, [previews])
 
+  const createAlbum = async (event) => {
+    event.preventDefault()
+
+    const title = albumTitle.trim()
+    const description = albumDescription.trim()
+
+    if (!title) {
+      alert("Escribe el nombre del álbum.")
+      return
+    }
+
+    try {
+      setCreatingAlbum(true)
+
+      const response = await axios.post(
+        `${API_URL}/gallery/albums`,
+        {
+          title,
+          description,
+          cover_image_url: "",
+        },
+        {
+          headers: authHeaders,
+        }
+      )
+
+      const newAlbum = response.data
+
+      setAlbumTitle("")
+      setAlbumDescription("")
+
+      await loadAlbums()
+
+      if (newAlbum?.id) {
+        setSelectedAlbum(String(newAlbum.id))
+      }
+
+      alert("Álbum creado correctamente")
+    } catch (error) {
+      console.error("Error creating album:", error)
+
+      alert(
+        error?.response?.data?.detail ||
+          "Error creando el álbum"
+      )
+    } finally {
+      setCreatingAlbum(false)
+    }
+  }
+
+  const deleteAlbum = async () => {
+    if (!selectedAlbum) return
+
+    const confirmed = window.confirm(
+      `¿Quieres eliminar el álbum "${selectedAlbumData?.title || ""}" y todas sus fotografías?`
+    )
+
+    if (!confirmed) return
+
+    try {
+      await axios.delete(
+        `${API_URL}/gallery/albums/${selectedAlbum}`,
+        {
+          headers: authHeaders,
+        }
+      )
+
+      setSelectedAlbum("")
+      setGallery([])
+
+      await loadAlbums()
+
+      alert("Álbum eliminado correctamente")
+    } catch (error) {
+      console.error("Error deleting album:", error)
+
+      alert(
+        error?.response?.data?.detail ||
+          "Error eliminando el álbum"
+      )
+    }
+  }
+
   const clearSelectedFiles = () => {
     previews.forEach((preview) => {
       URL.revokeObjectURL(preview)
@@ -120,6 +225,7 @@ function GalleryAdmin() {
 
     setSelectedFiles([])
     setPreviews([])
+
     setUploadProgress({
       current: 0,
       total: 0,
@@ -159,13 +265,17 @@ function GalleryAdmin() {
   }
 
   const uploadFileToCloudinary = async (file) => {
+    if (!selectedAlbum) {
+      throw new Error("No hay un álbum seleccionado.")
+    }
+
     const uploadData = new FormData()
 
     uploadData.append("file", file)
     uploadData.append("upload_preset", UPLOAD_PRESET)
     uploadData.append(
       "folder",
-      `colant/gallery/${selectedEvent}`
+      `colant/gallery/albums/${selectedAlbum}`
     )
 
     const response = await fetch(
@@ -189,8 +299,8 @@ function GalleryAdmin() {
   }
 
   const saveImages = async () => {
-    if (!selectedEvent) {
-      alert("Selecciona primero un evento.")
+    if (!selectedAlbum) {
+      alert("Selecciona primero un álbum.")
       return
     }
 
@@ -207,21 +317,23 @@ function GalleryAdmin() {
         total: selectedFiles.length,
       })
 
-      for (let index = 0; index < selectedFiles.length; index += 1) {
+      for (
+        let index = 0;
+        index < selectedFiles.length;
+        index += 1
+      ) {
         const file = selectedFiles[index]
 
-        const imageUrl = await uploadFileToCloudinary(file)
+        const imageUrl =
+          await uploadFileToCloudinary(file)
 
         await axios.post(
-          `${API_URL}/gallery`,
+          `${API_URL}/gallery/albums/${selectedAlbum}/photos`,
           {
-            event_id: selectedEvent,
             image_url: imageUrl,
           },
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: authHeaders,
           }
         )
 
@@ -232,7 +344,11 @@ function GalleryAdmin() {
       }
 
       clearSelectedFiles()
-      await loadGallery()
+
+      await Promise.all([
+        loadGallery(selectedAlbum),
+        loadAlbums(),
+      ])
 
       alert("Fotografías publicadas correctamente")
     } catch (error) {
@@ -257,35 +373,24 @@ function GalleryAdmin() {
 
     try {
       await axios.delete(
-        `${API_URL}/gallery/${photoId}`,
+        `${API_URL}/gallery/photos/${photoId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: authHeaders,
         }
       )
 
-      await loadGallery()
+      await Promise.all([
+        loadGallery(selectedAlbum),
+        loadAlbums(),
+      ])
     } catch (error) {
       console.error("Error deleting image:", error)
-      alert("Error eliminando la fotografía")
+
+      alert(
+        error?.response?.data?.detail ||
+          "Error eliminando la fotografía"
+      )
     }
-  }
-
-  const formatEventDate = (dateValue) => {
-    if (!dateValue) return "Sin fecha"
-
-    const date = new Date(dateValue)
-
-    if (Number.isNaN(date.getTime())) {
-      return "Sin fecha"
-    }
-
-    return new Intl.DateTimeFormat("es-AU", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date)
   }
 
   return (
@@ -300,81 +405,201 @@ function GalleryAdmin() {
         </h1>
 
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Selecciona un evento y publica sus fotografías
-          directamente desde tu teléfono o computador.
+          Crea álbumes y publica fotografías directamente
+          desde tu teléfono o computador.
         </p>
       </section>
 
+      {/* CREAR ÁLBUM */}
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-extrabold text-slate-950">
-            Seleccionar evento
+          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950">
+            <Plus size={20} />
+            Crear álbum
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Los eventos están organizados por fecha.
+            Crea una nueva colección para organizar las
+            fotografías.
+          </p>
+        </div>
+
+        <form
+          onSubmit={createAlbum}
+          className="space-y-4 p-5"
+        >
+          <div>
+            <label
+              htmlFor="album-title"
+              className="mb-2 block text-sm font-bold text-slate-700"
+            >
+              Nombre del álbum
+            </label>
+
+            <input
+              id="album-title"
+              type="text"
+              value={albumTitle}
+              onChange={(event) =>
+                setAlbumTitle(event.target.value)
+              }
+              placeholder="Ejemplo: Colombia Florece 2026"
+              className="w-full rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="album-description"
+              className="mb-2 block text-sm font-bold text-slate-700"
+            >
+              Descripción
+            </label>
+
+            <textarea
+              id="album-description"
+              value={albumDescription}
+              onChange={(event) =>
+                setAlbumDescription(event.target.value)
+              }
+              placeholder="Describe brevemente este álbum"
+              rows={3}
+              className="w-full resize-none rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={
+              creatingAlbum || !albumTitle.trim()
+            }
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus size={19} />
+
+            {creatingAlbum
+              ? "Creando..."
+              : "Crear álbum"}
+          </button>
+        </form>
+      </section>
+
+      {/* SELECCIONAR ÁLBUM */}
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-4">
+          <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950">
+            <FolderOpen size={20} />
+            Seleccionar álbum
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Selecciona el álbum que quieres administrar.
           </p>
         </div>
 
         <div className="p-5">
-          <select
-            value={selectedEvent}
-            onChange={(event) =>
-              setSelectedEvent(event.target.value)
-            }
-            className="w-full rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
-          >
-            <option value="">
-              Selecciona un evento
-            </option>
+          {loadingAlbums ? (
+            <div className="rounded-2xl bg-slate-50 p-5 text-center">
+              <p className="font-bold text-slate-600">
+                Cargando álbumes...
+              </p>
+            </div>
+          ) : albums.length === 0 ? (
+            <div className="rounded-2xl bg-slate-50 p-5 text-center">
+              <FolderOpen
+                size={32}
+                className="mx-auto text-slate-400"
+              />
 
-            {sortedEvents.map((event) => (
-              <option
-                key={event.id}
-                value={event.id}
+              <p className="mt-3 font-bold text-slate-800">
+                Todavía no hay álbumes
+              </p>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Crea tu primer álbum usando el formulario
+                anterior.
+              </p>
+            </div>
+          ) : (
+            <>
+              <select
+                value={selectedAlbum}
+                onChange={(event) =>
+                  setSelectedAlbum(event.target.value)
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
               >
-                {event.title} —{" "}
-                {formatEventDate(event.event_date)}
-              </option>
-            ))}
-          </select>
+                <option value="">
+                  Selecciona un álbum
+                </option>
 
-          {selectedEventData && (
-            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-              {selectedEventData.image_url ? (
-                <img
-                  src={selectedEventData.image_url}
-                  alt={selectedEventData.title}
-                  className="h-16 w-16 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-slate-200 text-slate-500">
-                  <CalendarDays size={25} />
+                {albums.map((album) => (
+                  <option
+                    key={album.id}
+                    value={album.id}
+                  >
+                    {album.title} —{" "}
+                    {album.photo_count || 0} foto
+                    {album.photo_count === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </select>
+
+              {selectedAlbumData && (
+                <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  {selectedAlbumData.cover_image_url ? (
+                    <img
+                      src={
+                        selectedAlbumData.cover_image_url
+                      }
+                      alt={selectedAlbumData.title}
+                      className="h-44 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-36 w-full items-center justify-center bg-slate-200 text-slate-500">
+                      <Images size={38} />
+                    </div>
+                  )}
+
+                  <div className="p-4">
+                    <h3 className="font-extrabold text-slate-950">
+                      {selectedAlbumData.title}
+                    </h3>
+
+                    {selectedAlbumData.description && (
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        {selectedAlbumData.description}
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex items-center justify-between gap-4">
+                      <p className="text-sm font-bold text-slate-600">
+                        {selectedAlbumData.photo_count || 0}{" "}
+                        fotografía
+                        {selectedAlbumData.photo_count === 1
+                          ? ""
+                          : "s"}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={deleteAlbum}
+                        className="flex items-center gap-1.5 text-sm font-bold text-red-600"
+                      >
+                        <Trash2 size={17} />
+                        Eliminar álbum
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
-
-              <div className="min-w-0">
-                <h3 className="truncate font-extrabold text-slate-950">
-                  {selectedEventData.title}
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {formatEventDate(
-                    selectedEventData.event_date
-                  )}
-                </p>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  {gallery.length} fotografía
-                  {gallery.length === 1 ? "" : "s"}
-                </p>
-              </div>
-            </div>
+            </>
           )}
         </div>
       </section>
 
-      {selectedEvent && (
+      {/* SUBIR FOTOS */}
+      {selectedAlbum && (
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-lg font-extrabold text-slate-950">
@@ -382,7 +607,8 @@ function GalleryAdmin() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Puedes seleccionar varias imágenes al mismo tiempo.
+              Puedes seleccionar varias imágenes al mismo
+              tiempo.
             </p>
           </div>
 
@@ -446,7 +672,7 @@ function GalleryAdmin() {
                 <div className="grid grid-cols-3 gap-2">
                   {previews.map((preview, index) => (
                     <img
-                      key={preview}
+                      key={`${preview}-${index}`}
                       src={preview}
                       alt={`Vista previa ${index + 1}`}
                       className="aspect-square w-full rounded-xl object-cover"
@@ -504,7 +730,8 @@ function GalleryAdmin() {
         </section>
       )}
 
-      {selectedEvent && (
+      {/* FOTOS PUBLICADAS */}
+      {selectedAlbum && (
         <section>
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
@@ -538,7 +765,7 @@ function GalleryAdmin() {
               />
 
               <p className="mt-3 font-bold text-slate-800">
-                Este evento todavía no tiene fotografías
+                Este álbum todavía no tiene fotografías
               </p>
             </div>
           ) : (
