@@ -19,8 +19,6 @@ import BottomNavigation from "./components/BottomNavigation"
 import { texts } from "./translations"
 
 function App() {
-  const HOME_EVENT_ID = "5ada371d-f75f-4b15-9141-d2cf5b2bdd69"
-
   const [events, setEvents] = useState([])
   const [businesses, setBusinesses] = useState([])
   const [gallery, setGallery] = useState([])
@@ -33,6 +31,7 @@ function App() {
   const [selectedEventDetail, setSelectedEventDetail] = useState(null)
   const [language, setLanguage] = useState("es")
 
+  // Se conserva porque Events.jsx todavía recibe estas propiedades.
   const [galleryByEvent, setGalleryByEvent] = useState({})
   const [attendeesByEvent, setAttendeesByEvent] = useState({})
 
@@ -85,46 +84,9 @@ function App() {
     }
   }
 
-  const loadHomeGallery = async () => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/gallery/${HOME_EVENT_ID}`
-      )
-
-      setGallery(
-        Array.isArray(response.data)
-          ? response.data
-          : []
-      )
-    } catch (error) {
-      console.error("Error loading home gallery:", error)
-    }
-  }
-
-  const loadGallery = async (eventId) => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/gallery/${eventId}`
-      )
-
-      setGalleryByEvent((previous) => ({
-        ...previous,
-        [eventId]: Array.isArray(response.data)
-          ? response.data
-          : [],
-      }))
-    } catch (error) {
-      console.error(
-        `Error loading gallery for event ${eventId}:`,
-        error
-      )
-    }
-  }
-
   useEffect(() => {
     loadEvents()
     loadBusinesses()
-    loadHomeGallery()
 
     const token = localStorage.getItem("token")
 
@@ -147,15 +109,6 @@ function App() {
         setUserProfile(null)
       })
   }, [])
-
-  useEffect(() => {
-    if (activeTab !== "gallery") return
-    if (events.length === 0) return
-
-    events.forEach((event) => {
-      loadGallery(event.id)
-    })
-  }, [activeTab, events])
 
   const logout = () => {
     localStorage.removeItem("token")
@@ -281,12 +234,7 @@ function App() {
           )}
 
           {activeTab === "gallery" && (
-            <Gallery
-              events={events}
-              galleryByEvent={galleryByEvent}
-              loadGallery={loadGallery}
-              language={language}
-            />
+            <Gallery language={language} />
           )}
 
           {activeTab === "notifications" && (
