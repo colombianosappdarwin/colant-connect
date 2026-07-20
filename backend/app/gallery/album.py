@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, String, Text
+from sqlalchemy import Column, Date, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.database import Base
@@ -23,6 +23,16 @@ class GalleryAlbum(Base):
 
     description = Column(
         Text,
+        nullable=True
+    )
+
+    location = Column(
+        String,
+        nullable=True
+    )
+
+    album_date = Column(
+        Date,
         nullable=True
     )
 

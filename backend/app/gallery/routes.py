@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,17 +23,62 @@ router = APIRouter(
 class AlbumCreate(BaseModel):
     title: str
     description: str = ""
+    location: str = ""
+    album_date: date | None = None
     cover_image_url: str = ""
 
 
 class AlbumUpdate(BaseModel):
     title: str
     description: str = ""
+    location: str = ""
+    album_date: date | None = None
     cover_image_url: str = ""
 
 
 class PhotoCreate(BaseModel):
     image_url: str
+
+
+# =========================================================
+# FUNCIONES AUXILIARES
+# =========================================================
+
+def validate_uuid(
+    value: str,
+    error_message: str
+) -> UUID:
+    try:
+        return UUID(value)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=400,
+            detail=error_message
+        )
+
+
+def get_album_or_404(
+    album_id: str,
+    db: Session
+) -> GalleryAlbum:
+    album_uuid = validate_uuid(
+        album_id,
+        "ID de álbum inválido."
+    )
+
+    album = (
+        db.query(GalleryAlbum)
+        .filter(GalleryAlbum.id == album_uuid)
+        .first()
+    )
+
+    if not album:
+        raise HTTPException(
+            status_code=404,
+            detail="Álbum no encontrado."
+        )
+
+    return album
 
 
 # =========================================================
@@ -55,6 +101,8 @@ def create_album(
     album = GalleryAlbum(
         title=title,
         description=album_data.description.strip(),
+        location=album_data.location.strip(),
+        album_date=album_data.album_date,
         cover_image_url=album_data.cover_image_url.strip()
     )
 
@@ -71,7 +119,10 @@ def get_albums(
 ):
     albums = (
         db.query(GalleryAlbum)
-        .order_by(GalleryAlbum.created_at.desc())
+        .order_by(
+            GalleryAlbum.album_date.desc().nullslast(),
+            GalleryAlbum.created_at.desc()
+        )
         .all()
     )
 
@@ -100,6 +151,8 @@ def get_albums(
             "id": str(album.id),
             "title": album.title,
             "description": album.description or "",
+            "location": album.location or "",
+            "album_date": album.album_date,
             "cover_image_url": cover_image_url,
             "created_at": album.created_at,
             "photo_count": photo_count
@@ -113,22 +166,7 @@ def get_album(
     album_id: str,
     db: Session = Depends(get_db)
 ):
-    album_uuid = validate_uuid(
-        album_id,
-        "ID de álbum inválido."
-    )
-
-    album = (
-        db.query(GalleryAlbum)
-        .filter(GalleryAlbum.id == album_uuid)
-        .first()
-    )
-
-    if not album:
-        raise HTTPException(
-            status_code=404,
-            detail="Álbum no encontrado."
-        )
+    album = get_album_or_404(album_id, db)
 
     photo_count = (
         db.query(Gallery)
@@ -136,11 +174,25 @@ def get_album(
         .count()
     )
 
+    cover_image_url = album.cover_image_url or ""
+
+    if not cover_image_url:
+        first_photo = (
+            db.query(Gallery)
+            .filter(Gallery.album_id == album.id)
+            .first()
+        )
+
+        if first_photo:
+            cover_image_url = first_photo.image_url
+
     return {
         "id": str(album.id),
         "title": album.title,
         "description": album.description or "",
-        "cover_image_url": album.cover_image_url or "",
+        "location": album.location or "",
+        "album_date": album.album_date,
+        "cover_image_url": cover_image_url,
         "created_at": album.created_at,
         "photo_count": photo_count
     }
@@ -152,22 +204,7 @@ def update_album(
     album_data: AlbumUpdate,
     db: Session = Depends(get_db)
 ):
-    album_uuid = validate_uuid(
-        album_id,
-        "ID de álbum inválido."
-    )
-
-    album = (
-        db.query(GalleryAlbum)
-        .filter(GalleryAlbum.id == album_uuid)
-        .first()
-    )
-
-    if not album:
-        raise HTTPException(
-            status_code=404,
-            detail="Álbum no encontrado."
-        )
+    album = get_album_or_404(album_id, db)
 
     title = album_data.title.strip()
 
@@ -179,6 +216,8 @@ def update_album(
 
     album.title = title
     album.description = album_data.description.strip()
+    album.location = album_data.location.strip()
+    album.album_date = album_data.album_date
     album.cover_image_url = album_data.cover_image_url.strip()
 
     db.commit()
@@ -192,22 +231,7 @@ def delete_album(
     album_id: str,
     db: Session = Depends(get_db)
 ):
-    album_uuid = validate_uuid(
-        album_id,
-        "ID de álbum inválido."
-    )
-
-    album = (
-        db.query(GalleryAlbum)
-        .filter(GalleryAlbum.id == album_uuid)
-        .first()
-    )
-
-    if not album:
-        raise HTTPException(
-            status_code=404,
-            detail="Álbum no encontrado."
-        )
+    album = get_album_or_404(album_id, db)
 
     db.delete(album)
     db.commit()
@@ -227,22 +251,7 @@ def add_photo_to_album(
     photo_data: PhotoCreate,
     db: Session = Depends(get_db)
 ):
-    album_uuid = validate_uuid(
-        album_id,
-        "ID de álbum inválido."
-    )
-
-    album = (
-        db.query(GalleryAlbum)
-        .filter(GalleryAlbum.id == album_uuid)
-        .first()
-    )
-
-    if not album:
-        raise HTTPException(
-            status_code=404,
-            detail="Álbum no encontrado."
-        )
+    album = get_album_or_404(album_id, db)
 
     image_url = photo_data.image_url.strip()
 
@@ -254,7 +263,7 @@ def add_photo_to_album(
 
     photo = Gallery(
         image_url=image_url,
-        album_id=album_uuid,
+        album_id=album.id,
         event_id=None
     )
 
@@ -275,26 +284,11 @@ def get_album_photos(
     album_id: str,
     db: Session = Depends(get_db)
 ):
-    album_uuid = validate_uuid(
-        album_id,
-        "ID de álbum inválido."
-    )
-
-    album = (
-        db.query(GalleryAlbum)
-        .filter(GalleryAlbum.id == album_uuid)
-        .first()
-    )
-
-    if not album:
-        raise HTTPException(
-            status_code=404,
-            detail="Álbum no encontrado."
-        )
+    album = get_album_or_404(album_id, db)
 
     photos = (
         db.query(Gallery)
-        .filter(Gallery.album_id == album_uuid)
+        .filter(Gallery.album_id == album.id)
         .all()
     )
 
@@ -354,20 +348,3 @@ def delete_photo(
     return {
         "message": "Fotografía eliminada correctamente."
     }
-
-
-# =========================================================
-# FUNCIONES AUXILIARES
-# =========================================================
-
-def validate_uuid(
-    value: str,
-    error_message: str
-) -> UUID:
-    try:
-        return UUID(value)
-    except (ValueError, TypeError):
-        raise HTTPException(
-            status_code=400,
-            detail=error_message
-        )
