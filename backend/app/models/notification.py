@@ -36,6 +36,11 @@ class Notification(Base):
         nullable=False
     )
 
+    image_url = Column(
+        Text,
+        nullable=True
+    )
+
     # general, event, community, emergency, promotion
     category = Column(
         String(50),
