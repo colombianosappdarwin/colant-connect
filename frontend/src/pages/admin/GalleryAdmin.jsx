@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import axios from "axios"
 import {
+  CalendarDays,
   Camera,
   FolderOpen,
   Images,
+  MapPin,
   Plus,
   Trash2,
   Upload,
@@ -24,6 +26,8 @@ function GalleryAdmin() {
 
   const [albumTitle, setAlbumTitle] = useState("")
   const [albumDescription, setAlbumDescription] = useState("")
+  const [albumLocation, setAlbumLocation] = useState("")
+  const [albumDate, setAlbumDate] = useState("")
 
   const [selectedFiles, setSelectedFiles] = useState([])
   const [previews, setPreviews] = useState([])
@@ -46,6 +50,22 @@ function GalleryAdmin() {
 
   const authHeaders = {
     Authorization: `Bearer ${token}`,
+  }
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "Fecha no disponible"
+
+    const date = new Date(`${dateValue}T00:00:00`)
+
+    if (Number.isNaN(date.getTime())) {
+      return "Fecha no disponible"
+    }
+
+    return new Intl.DateTimeFormat("es-AU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date)
   }
 
   const loadAlbums = async () => {
@@ -140,9 +160,20 @@ function GalleryAdmin() {
 
     const title = albumTitle.trim()
     const description = albumDescription.trim()
+    const location = albumLocation.trim()
 
     if (!title) {
       alert("Escribe el nombre del álbum.")
+      return
+    }
+
+    if (!location) {
+      alert("Escribe el lugar del álbum.")
+      return
+    }
+
+    if (!albumDate) {
+      alert("Selecciona la fecha del álbum.")
       return
     }
 
@@ -154,6 +185,8 @@ function GalleryAdmin() {
         {
           title,
           description,
+          location,
+          album_date: albumDate,
           cover_image_url: "",
         },
         {
@@ -165,6 +198,8 @@ function GalleryAdmin() {
 
       setAlbumTitle("")
       setAlbumDescription("")
+      setAlbumLocation("")
+      setAlbumDate("")
 
       await loadAlbums()
 
@@ -410,7 +445,6 @@ function GalleryAdmin() {
         </p>
       </section>
 
-      {/* CREAR ÁLBUM */}
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950">
@@ -468,10 +502,66 @@ function GalleryAdmin() {
             />
           </div>
 
+          <div>
+            <label
+              htmlFor="album-location"
+              className="mb-2 block text-sm font-bold text-slate-700"
+            >
+              Lugar
+            </label>
+
+            <div className="relative">
+              <MapPin
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                id="album-location"
+                type="text"
+                value={albumLocation}
+                onChange={(event) =>
+                  setAlbumLocation(event.target.value)
+                }
+                placeholder="Ejemplo: Darwin Waterfront"
+                className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-11 pr-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="album-date"
+              className="mb-2 block text-sm font-bold text-slate-700"
+            >
+              Fecha
+            </label>
+
+            <div className="relative">
+              <CalendarDays
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                id="album-date"
+                type="date"
+                value={albumDate}
+                onChange={(event) =>
+                  setAlbumDate(event.target.value)
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-11 pr-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={
-              creatingAlbum || !albumTitle.trim()
+              creatingAlbum ||
+              !albumTitle.trim() ||
+              !albumLocation.trim() ||
+              !albumDate
             }
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -484,7 +574,6 @@ function GalleryAdmin() {
         </form>
       </section>
 
-      {/* SELECCIONAR ÁLBUM */}
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950">
@@ -572,7 +661,26 @@ function GalleryAdmin() {
                       </p>
                     )}
 
-                    <div className="mt-3 flex items-center justify-between gap-4">
+                    <div className="mt-3 space-y-2 text-sm text-slate-500">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays size={16} />
+                        <span>
+                          {formatDate(
+                            selectedAlbumData.album_date
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <MapPin size={16} />
+                        <span>
+                          {selectedAlbumData.location ||
+                            "Lugar no disponible"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-4">
                       <p className="text-sm font-bold text-slate-600">
                         {selectedAlbumData.photo_count || 0}{" "}
                         fotografía
@@ -598,7 +706,6 @@ function GalleryAdmin() {
         </div>
       </section>
 
-      {/* SUBIR FOTOS */}
       {selectedAlbum && (
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-5 py-4">
@@ -730,7 +837,6 @@ function GalleryAdmin() {
         </section>
       )}
 
-      {/* FOTOS PUBLICADAS */}
       {selectedAlbum && (
         <section>
           <div className="mb-4 flex items-end justify-between gap-4">
