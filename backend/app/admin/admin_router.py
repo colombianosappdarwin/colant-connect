@@ -1,10 +1,34 @@
-@router.get("/statistics")
-def get_admin_statistics(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    require_admin(current_user)
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
+from app.database.database import get_db
+from app.models.user_model import User
+from app.models.event import Event
+from app.gallery.gallery import Gallery
+from app.models.notification import Notification
+from app.admin.pdf_report import generate_statistics_pdf
+
+# Cambia este import por el que ya uses en tu proyecto
+from app.core.security import get_current_user
+
+
+router = APIRouter(
+    prefix="/admin",
+    tags=["Admin"]
+)
+
+
+def require_admin(current_user: User):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required"
+        )
+
+
+def build_statistics_data(db: Session):
     total_users = db.query(User).count()
     total_events = db.query(Event).count()
     total_photos = db.query(Gallery).count()
@@ -16,6 +40,7 @@ def get_admin_statistics(
             func.count(User.id)
         )
         .group_by(User.visa_type)
+        .order_by(func.count(User.id).desc())
         .all()
     )
 
@@ -25,6 +50,7 @@ def get_admin_statistics(
             func.count(User.id)
         )
         .group_by(User.industry)
+        .order_by(func.count(User.id).desc())
         .all()
     )
 
@@ -34,6 +60,7 @@ def get_admin_statistics(
             func.count(User.id)
         )
         .group_by(User.country_origin)
+        .order_by(func.count(User.id).desc())
         .all()
     )
 
@@ -43,19 +70,29 @@ def get_admin_statistics(
             func.count(User.id)
         )
         .group_by(User.city_origin)
+        .order_by(func.count(User.id).desc())
         .all()
     )
 
     user_growth = (
         db.query(
-            func.date_trunc("month", User.created_at).label("month"),
+            func.date_trunc(
+                "month",
+                User.created_at
+            ).label("month"),
             func.count(User.id).label("total")
         )
         .group_by(
-            func.date_trunc("month", User.created_at)
+            func.date_trunc(
+                "month",
+                User.created_at
+            )
         )
         .order_by(
-            func.date_trunc("month", User.created_at)
+            func.date_trunc(
+                "month",
+                User.created_at
+            )
         )
         .all()
     )
@@ -104,5 +141,35 @@ def get_admin_statistics(
                 "total": total
             }
             for month, total in user_growth
+            if month is not None
         ]
     }
+
+
+@router.get("/statistics")
+def get_admin_statistics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    require_admin(current_user)
+    return build_statistics_data(db)
+
+
+@router.get("/statistics/pdf")
+def download_statistics_pdf(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    require_admin(current_user)
+
+    statistics = build_statistics_data(db)
+    pdf_buffer = generate_statistics_pdf(statistics)
+
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+                'attachment; filename="colant-connect-statistics.pdf"'
+        }
+    )
