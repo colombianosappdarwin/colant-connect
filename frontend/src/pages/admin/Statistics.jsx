@@ -13,12 +13,10 @@ function StatisticsAdmin() {
     total_events: 0,
     total_photos: 0,
     total_notifications: 0,
-
     users_by_visa: [],
     users_by_country: [],
     users_by_city: [],
     users_by_industry: [],
-
     user_growth: [],
   });
 
@@ -82,20 +80,37 @@ function StatisticsAdmin() {
             response.data.user_growth ?? [],
         });
 
+        setError("");
       } catch (requestError) {
         console.error(
           "Error loading statistics:",
           requestError.response?.data || requestError
         );
 
-        if (requestError.response?.status === 401) {
-          setError("Your session has expired. Please log in again.");
-        } else if (requestError.response?.status === 403) {
-          setError("Only administrators can access these statistics.");
-        } else {
-          setError("The statistics could not be loaded.");
-        }
+        const backendMessage =
+          requestError.response?.data?.detail;
 
+        if (requestError.response?.status === 401) {
+          setError(
+            backendMessage ||
+              "Your session has expired. Please log in again."
+          );
+        } else if (requestError.response?.status === 403) {
+          setError(
+            backendMessage ||
+              "Only administrators can access these statistics."
+          );
+        } else if (requestError.response?.status === 404) {
+          setError(
+            backendMessage ||
+              "The statistics endpoint was not found."
+          );
+        } else {
+          setError(
+            backendMessage ||
+              "The statistics could not be loaded."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -108,22 +123,26 @@ function StatisticsAdmin() {
     {
       title: "Registered Users",
       value: statistics.total_users,
-      description: "Real users registered in COLANT Connect.",
+      description:
+        "Real users registered in COLANT Connect.",
     },
     {
       title: "Events",
       value: statistics.total_events,
-      description: "Events currently stored in the platform.",
+      description:
+        "Events currently stored in the platform.",
     },
     {
       title: "Gallery Photos",
       value: statistics.total_photos,
-      description: "Photos currently stored in the gallery.",
+      description:
+        "Photos currently stored in the gallery.",
     },
     {
       title: "Notifications",
       value: statistics.total_notifications,
-      description: "Notifications created in COLANT Connect.",
+      description:
+        "Notifications created in COLANT Connect.",
     },
   ];
 
@@ -132,6 +151,7 @@ function StatisticsAdmin() {
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-950" />
+
           <p className="mt-4 font-semibold text-slate-600">
             Loading real statistics...
           </p>
@@ -156,7 +176,6 @@ function StatisticsAdmin() {
 
   return (
     <div className="space-y-6">
-
       <DashboardHeader />
 
       <StatsCards stats={stats} />
@@ -188,7 +207,6 @@ function StatisticsAdmin() {
         data={statistics.users_by_industry}
         field="industry"
       />
-
     </div>
   );
 }
