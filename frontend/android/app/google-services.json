@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713772860555",
+    "project_id": "colant-connect",
+    "storage_bucket": "colant-connect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713772860555:android:9f6194bb335b035edb008e",
+        "android_client_info": {
+          "package_name": "com.colant.connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsFATO-SXPTmlmt4PIAx64awXKosw5YE8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

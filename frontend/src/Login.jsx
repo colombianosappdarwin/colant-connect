@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "./config";
 import backgroundImage from "./assets/Colant.png";
-import { requestNotificationPermission } from "./firebase";
+import { initializePushNotifications } from "./pushNotifications";
 
 function Login({ onRegisterClick, onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -48,30 +48,6 @@ function Login({ onRegisterClick, onLoginSuccess }) {
 
   const t = texts[language];
 
-  const saveFcmToken = async (jwtToken) => {
-    try {
-      const fcmToken = await requestNotificationPermission();
-
-      if (!fcmToken) {
-        return;
-      }
-
-      await axios.post(
-        `${API_URL}/auth/save-fcm-token`,
-        {
-          fcm_token: fcmToken,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error saving FCM token:", error.response?.data || error);
-    }
-  };
-
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -94,7 +70,7 @@ function Login({ onRegisterClick, onLoginSuccess }) {
       localStorage.setItem("email", response.data.email);
       localStorage.setItem("language", language);
 
-      await saveFcmToken(jwtToken);
+      await initializePushNotifications();
 
       const profileResponse = await axios.get(`${API_URL}/auth/me`, {
         headers: {
