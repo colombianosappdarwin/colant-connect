@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "./config";
 import backgroundImage from "./assets/Colant.png";
-import { initializePushNotifications } from "./pushNotifications";
+import { initializePushNotifications } from "./services/pushNotifications";
 
 function Login({ onRegisterClick, onLoginSuccess }) {
   const [email, setEmail] = useState("");
