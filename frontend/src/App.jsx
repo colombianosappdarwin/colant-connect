@@ -1,123 +1,188 @@
-import { useEffect, useState } from "react"
-import axios from "axios"
-import { API_URL } from "./config"
-import { initializePushNotifications } from "./services/pushNotifications";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_URL } from "./config";
+import { initializePushNotifications } from "./pushNotifications";
 
-import Register from "./Register"
-import Login from "./Login"
-import VerifyEmail from "./pages/VerifyEmail"
-import ResetPassword from "./pages/ResetPassword"
+import Register from "./Register";
+import Login from "./Login";
+import VerifyEmail from "./pages/VerifyEmail";
+import ResetPassword from "./pages/ResetPassword";
 
-import EventDetail from "./EventDetail"
-import EventMap from "./EventMap"
-import Home from "./pages/Home"
-import Profile from "./pages/Profile"
-import Events from "./pages/Events"
-import Gallery from "./pages/Gallery"
-import Notifications from "./pages/Notifications"
-import AdminDashboard from "./pages/AdminDashboard"
-import BottomNavigation from "./components/BottomNavigation"
-import { texts } from "./translations"
+import EventDetail from "./EventDetail";
+import EventMap from "./EventMap";
+import Home from "./pages/Home";
+import Profile from "./pages/Profile";
+import Events from "./pages/Events";
+import Gallery from "./pages/Gallery";
+import Notifications from "./pages/Notifications";
+import AdminDashboard from "./pages/AdminDashboard";
+import BottomNavigation from "./components/BottomNavigation";
+import { texts } from "./translations";
 
 function App() {
-  const [events, setEvents] = useState([])
-  const [businesses, setBusinesses] = useState([])
-  const [gallery, setGallery] = useState([])
-  const [userProfile, setUserProfile] = useState(null)
+  const [events, setEvents] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
+  const [gallery, setGallery] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
 
-  const [authMode, setAuthMode] = useState("login")
-  const [verificationEmail, setVerificationEmail] = useState("")
+  // Mientras se verifica el token, mostramos la pantalla de carga.
+  const [checkingSession, setCheckingSession] = useState(true);
 
-  const [activeTab, setActiveTab] = useState("home")
-  const [selectedEventDetail, setSelectedEventDetail] = useState(null)
-  const [language, setLanguage] = useState("es")
+  const [authMode, setAuthMode] = useState("login");
+  const [verificationEmail, setVerificationEmail] = useState("");
 
-  // Se conserva porque Events.jsx todavía recibe estas propiedades.
-  const [galleryByEvent, setGalleryByEvent] = useState({})
-  const [attendeesByEvent, setAttendeesByEvent] = useState({})
+  const [activeTab, setActiveTab] = useState("home");
+  const [selectedEventDetail, setSelectedEventDetail] = useState(null);
 
-  const t = texts[language]
+  const [language, setLanguage] = useState(
+    localStorage.getItem("language") || "es"
+  );
+
+  const [galleryByEvent, setGalleryByEvent] = useState({});
+  const [attendeesByEvent, setAttendeesByEvent] = useState({});
+
+  const t = texts[language];
 
   const toggleLanguage = () => {
-    setLanguage((previousLanguage) =>
-      previousLanguage === "es" ? "en" : "es"
-    )
-  }
+    setLanguage((previousLanguage) => {
+      const newLanguage =
+        previousLanguage === "es" ? "en" : "es";
 
-  const whatsappNumber = "+61405376310"
+      localStorage.setItem("language", newLanguage);
+
+      return newLanguage;
+    });
+  };
+
+  const whatsappNumber = "+61405376310";
 
   const whatsappText =
     language === "es"
       ? "Hola COLANT Connect, quiero más información."
-      : "Hello COLANT Connect, I would like more information."
+      : "Hello COLANT Connect, I would like more information.";
 
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     whatsappText
-  )}`
+  )}`;
 
   const loadEvents = async () => {
     try {
-      const response = await axios.get(`${API_URL}/events/`)
+      const response = await axios.get(`${API_URL}/events/`);
 
       setEvents(
         Array.isArray(response.data)
           ? response.data
           : []
-      )
+      );
     } catch (error) {
-      console.error("Error loading events:", error)
+      console.error("Error loading events:", error);
     }
-  }
+  };
 
   const loadBusinesses = async () => {
     try {
       const response = await axios.get(
         `${API_URL}/businesses/`
-      )
+      );
 
       setBusinesses(
         Array.isArray(response.data)
           ? response.data
           : []
-      )
+      );
     } catch (error) {
-      console.error("Error loading businesses:", error)
+      console.error("Error loading businesses:", error);
     }
-  }
+  };
+
+  const restoreSession = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setCheckingSession(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${API_URL}/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setUserProfile(response.data);
+      setActiveTab("home");
+
+      // Registra nuevamente el dispositivo para notificaciones.
+      try {
+        await initializePushNotifications();
+      } catch (pushError) {
+        console.error(
+          "Error initializing push notifications:",
+          pushError
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Stored session is no longer valid:",
+        error.response?.data || error
+      );
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("email");
+
+      setUserProfile(null);
+    } finally {
+      setCheckingSession(false);
+    }
+  };
 
   useEffect(() => {
-    loadEvents()
-    loadBusinesses()
-
-    const token = localStorage.getItem("token")
-
-    if (!token) return
-
-    axios
-      .get(`${API_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        setUserProfile(response.data)
-      })
-      .catch((error) => {
-        console.error("Error loading profile:", error)
-
-        localStorage.removeItem("token")
-        localStorage.removeItem("email")
-        setUserProfile(null)
-      })
-  }, [])
+    loadEvents();
+    loadBusinesses();
+    restoreSession();
+  }, []);
 
   const logout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("email")
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
 
-    setUserProfile(null)
-    setActiveTab("home")
-    setSelectedEventDetail(null)
+    setUserProfile(null);
+    setAuthMode("login");
+    setActiveTab("home");
+    setSelectedEventDetail(null);
+  };
+
+  // Pantalla inicial mientras verificamos la sesión guardada.
+  if (checkingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-blue-950 px-6">
+        <div className="text-center">
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-yellow-400 text-5xl shadow-2xl">
+            🇨🇴
+          </div>
+
+          <h1 className="text-4xl font-extrabold text-white">
+            COLANT
+          </h1>
+
+          <p className="mt-2 text-lg font-semibold text-blue-100">
+            Colombianos en Australia
+          </p>
+
+          <div className="mx-auto mt-8 h-10 w-10 animate-spin rounded-full border-4 border-white/30 border-t-yellow-400" />
+
+          <p className="mt-4 text-sm text-blue-200">
+            {language === "es"
+              ? "Cargando tu sesión..."
+              : "Loading your session..."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!userProfile) {
@@ -126,7 +191,7 @@ function App() {
         <ResetPassword
           onLoginClick={() => setAuthMode("login")}
         />
-      )
+      );
     }
 
     if (authMode === "verifyEmail") {
@@ -135,7 +200,7 @@ function App() {
           initialEmail={verificationEmail}
           onLoginClick={() => setAuthMode("login")}
         />
-      )
+      );
     }
 
     if (authMode === "register") {
@@ -143,22 +208,22 @@ function App() {
         <Register
           onLoginClick={() => setAuthMode("login")}
           onRegisterSuccess={(email) => {
-            setVerificationEmail(email)
-            setAuthMode("verifyEmail")
+            setVerificationEmail(email);
+            setAuthMode("verifyEmail");
           }}
         />
-      )
+      );
     }
 
     return (
       <Login
         onRegisterClick={() => setAuthMode("register")}
         onLoginSuccess={(profile) => {
-          setUserProfile(profile)
-          setActiveTab("home")
+          setUserProfile(profile);
+          setActiveTab("home");
         }}
       />
-    )
+    );
   }
 
   return (
@@ -284,7 +349,7 @@ function App() {
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
