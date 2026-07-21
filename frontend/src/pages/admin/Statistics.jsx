@@ -5,7 +5,7 @@ import { API_URL } from "../../config";
 import DashboardHeader from "./dashboard/DashboardHeader";
 import StatsCards from "./dashboard/StatsCards";
 
-function StatisticsAdmin() {
+function StatisticsAdmin({ language = "es" }) {
   const [statistics, setStatistics] = useState({
     total_users: 0,
     total_events: 0,
@@ -17,17 +17,156 @@ function StatisticsAdmin() {
   const [error, setError] = useState("");
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
+  const translations = {
+    es: {
+      noSession: "No se encontró una sesión de administrador.",
+      sessionExpired:
+        "Tu sesión ha expirado. Inicia sesión nuevamente.",
+      onlyAdmins:
+        "Solo los administradores pueden acceder a estas estadísticas.",
+      endpointNotFound:
+        "No se encontró el servicio de estadísticas.",
+      loadError:
+        "No fue posible cargar las estadísticas.",
+
+      pdfOnlyAdmins:
+        "Solo los administradores pueden descargar este reporte.",
+      pdfUnavailable:
+        "El reporte PDF todavía no está disponible.",
+      pdfError:
+        "No fue posible generar el reporte PDF.",
+
+      registeredUsers: "Usuarios registrados",
+      registeredUsersDescription:
+        "Usuarios registrados en COLANT Connect.",
+
+      events: "Eventos",
+      eventsDescription:
+        "Eventos almacenados en la plataforma.",
+
+      galleryPhotos: "Fotos de la galería",
+      galleryPhotosDescription:
+        "Fotografías almacenadas en la galería.",
+
+      notifications: "Notificaciones",
+      notificationsDescription:
+        "Notificaciones creadas en la plataforma.",
+
+      loadingStatistics: "Cargando estadísticas...",
+      statisticsUnavailable:
+        "Estadísticas no disponibles",
+
+      completeReport: "Reporte completo",
+      completeReportDescription:
+        "Descarga un reporte PDF completo con los totales de la plataforma y los usuarios registrados.",
+
+      reportIncludes: "El reporte incluye:",
+      registeredUsersSummary:
+        "✓ Resumen de usuarios registrados",
+      fullNameEmail:
+        "✓ Nombre completo y correo electrónico",
+      telephoneNumber: "✓ Número telefónico",
+      countryCityOrigin:
+        "✓ País y ciudad de origen",
+      visaType: "✓ Tipo de visa",
+      industry: "✓ Industria",
+      preferredLanguage:
+        "✓ Idioma preferido",
+      registrationDate:
+        "✓ Fecha de registro",
+
+      generatingPDF: "Generando PDF...",
+      downloadCompleteReport:
+        "⬇ Descargar reporte completo (PDF)",
+      reportFooter:
+        "Reporte administrativo de COLANT Connect",
+    },
+
+    en: {
+      noSession:
+        "No administrator session was found.",
+      sessionExpired:
+        "Your session has expired. Please log in again.",
+      onlyAdmins:
+        "Only administrators can access these statistics.",
+      endpointNotFound:
+        "The statistics endpoint was not found.",
+      loadError:
+        "The statistics could not be loaded.",
+
+      pdfOnlyAdmins:
+        "Only administrators can download this report.",
+      pdfUnavailable:
+        "The PDF report is not available yet.",
+      pdfError:
+        "The PDF report could not be generated.",
+
+      registeredUsers: "Registered Users",
+      registeredUsersDescription:
+        "Users registered in COLANT Connect.",
+
+      events: "Events",
+      eventsDescription:
+        "Events stored in the platform.",
+
+      galleryPhotos: "Gallery Photos",
+      galleryPhotosDescription:
+        "Photos stored in the gallery.",
+
+      notifications: "Notifications",
+      notificationsDescription:
+        "Notifications created in the platform.",
+
+      loadingStatistics:
+        "Loading statistics...",
+      statisticsUnavailable:
+        "Statistics unavailable",
+
+      completeReport: "Complete Report",
+      completeReportDescription:
+        "Download a complete PDF report with the platform totals and the registered users.",
+
+      reportIncludes:
+        "The report includes:",
+      registeredUsersSummary:
+        "✓ Registered users summary",
+      fullNameEmail:
+        "✓ Full name and email",
+      telephoneNumber:
+        "✓ Telephone number",
+      countryCityOrigin:
+        "✓ Country and city of origin",
+      visaType: "✓ Visa type",
+      industry: "✓ Industry",
+      preferredLanguage:
+        "✓ Preferred language",
+      registrationDate:
+        "✓ Registration date",
+
+      generatingPDF: "Generating PDF...",
+      downloadCompleteReport:
+        "⬇ Download Complete Report (PDF)",
+      reportFooter:
+        "COLANT Connect administrative report",
+    },
+  };
+
+  const t =
+    translations[language] || translations.es;
+
   useEffect(() => {
     const loadStatistics = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setError("No administrator session was found.");
+        setError(t.noSession);
         setLoading(false);
         return;
       }
 
       try {
+        setLoading(true);
+
         const response = await axios.get(
           `${API_URL}/admin/statistics`,
           {
@@ -63,31 +202,38 @@ function StatisticsAdmin() {
       } catch (requestError) {
         console.error(
           "Error loading statistics:",
-          requestError.response?.data || requestError
+          requestError.response?.data ||
+            requestError
         );
 
         const backendMessage =
           requestError.response?.data?.detail;
 
-        if (requestError.response?.status === 401) {
+        if (
+          requestError.response?.status === 401
+        ) {
           setError(
             backendMessage ||
-              "Your session has expired. Please log in again."
+              t.sessionExpired
           );
-        } else if (requestError.response?.status === 403) {
+        } else if (
+          requestError.response?.status === 403
+        ) {
           setError(
             backendMessage ||
-              "Only administrators can access these statistics."
+              t.onlyAdmins
           );
-        } else if (requestError.response?.status === 404) {
+        } else if (
+          requestError.response?.status === 404
+        ) {
           setError(
             backendMessage ||
-              "The statistics endpoint was not found."
+              t.endpointNotFound
           );
         } else {
           setError(
             backendMessage ||
-              "The statistics could not be loaded."
+              t.loadError
           );
         }
       } finally {
@@ -96,13 +242,13 @@ function StatisticsAdmin() {
     };
 
     loadStatistics();
-  }, []);
+  }, [language]);
 
   const downloadPDF = async () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("No administrator session was found.");
+      alert(t.noSession);
       return;
     }
 
@@ -144,25 +290,24 @@ function StatisticsAdmin() {
     } catch (requestError) {
       console.error(
         "Error downloading PDF:",
-        requestError.response?.data || requestError
+        requestError.response?.data ||
+          requestError
       );
 
-      if (requestError.response?.status === 401) {
-        alert(
-          "Your session has expired. Please log in again."
-        );
-      } else if (requestError.response?.status === 403) {
-        alert(
-          "Only administrators can download this report."
-        );
-      } else if (requestError.response?.status === 404) {
-        alert(
-          "The PDF report is not available yet."
-        );
+      if (
+        requestError.response?.status === 401
+      ) {
+        alert(t.sessionExpired);
+      } else if (
+        requestError.response?.status === 403
+      ) {
+        alert(t.pdfOnlyAdmins);
+      } else if (
+        requestError.response?.status === 404
+      ) {
+        alert(t.pdfUnavailable);
       } else {
-        alert(
-          "The PDF report could not be generated."
-        );
+        alert(t.pdfError);
       }
     } finally {
       setDownloadingPDF(false);
@@ -171,28 +316,29 @@ function StatisticsAdmin() {
 
   const stats = [
     {
-      title: "Registered Users",
+      title: t.registeredUsers,
       value: statistics.total_users,
       description:
-        "Users registered in COLANT Connect.",
+        t.registeredUsersDescription,
     },
     {
-      title: "Events",
+      title: t.events,
       value: statistics.total_events,
       description:
-        "Events stored in the platform.",
+        t.eventsDescription,
     },
     {
-      title: "Gallery Photos",
+      title: t.galleryPhotos,
       value: statistics.total_photos,
       description:
-        "Photos stored in the gallery.",
+        t.galleryPhotosDescription,
     },
     {
-      title: "Notifications",
-      value: statistics.total_notifications,
+      title: t.notifications,
+      value:
+        statistics.total_notifications,
       description:
-        "Notifications created in the platform.",
+        t.notificationsDescription,
     },
   ];
 
@@ -203,7 +349,7 @@ function StatisticsAdmin() {
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-950" />
 
           <p className="mt-4 font-semibold text-slate-600">
-            Loading statistics...
+            {t.loadingStatistics}
           </p>
         </div>
       </div>
@@ -214,7 +360,7 @@ function StatisticsAdmin() {
     return (
       <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
         <h2 className="text-xl font-extrabold text-red-700">
-          Statistics unavailable
+          {t.statisticsUnavailable}
         </h2>
 
         <p className="mt-2 text-sm text-red-600">
@@ -226,7 +372,7 @@ function StatisticsAdmin() {
 
   return (
     <div className="space-y-6">
-      <DashboardHeader />
+      <DashboardHeader language={language} />
 
       <StatsCards stats={stats} />
 
@@ -238,30 +384,29 @@ function StatisticsAdmin() {
 
           <div>
             <h2 className="text-xl font-extrabold text-slate-900">
-              Complete Report
+              {t.completeReport}
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-slate-600">
-              Download a complete PDF report with the
-              platform totals and the registered users.
+              {t.completeReportDescription}
             </p>
           </div>
         </div>
 
         <div className="mt-6 rounded-2xl bg-slate-50 p-5">
           <h3 className="font-bold text-slate-900">
-            The report includes:
+            {t.reportIncludes}
           </h3>
 
           <div className="mt-4 space-y-3 text-sm text-slate-600">
-            <p>✓ Registered users summary</p>
-            <p>✓ Full name and email</p>
-            <p>✓ Telephone number</p>
-            <p>✓ Country and city of origin</p>
-            <p>✓ Visa type</p>
-            <p>✓ Industry</p>
-            <p>✓ Preferred language</p>
-            <p>✓ Registration date</p>
+            <p>{t.registeredUsersSummary}</p>
+            <p>{t.fullNameEmail}</p>
+            <p>{t.telephoneNumber}</p>
+            <p>{t.countryCityOrigin}</p>
+            <p>{t.visaType}</p>
+            <p>{t.industry}</p>
+            <p>{t.preferredLanguage}</p>
+            <p>{t.registrationDate}</p>
           </div>
         </div>
 
@@ -272,12 +417,12 @@ function StatisticsAdmin() {
           className="mt-6 w-full rounded-2xl bg-blue-950 px-5 py-4 font-bold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {downloadingPDF
-            ? "Generating PDF..."
-            : "⬇ Download Complete Report (PDF)"}
+            ? t.generatingPDF
+            : t.downloadCompleteReport}
         </button>
 
         <p className="mt-4 text-center text-xs text-slate-500">
-          COLANT Connect administrative report
+          {t.reportFooter}
         </p>
       </section>
     </div>

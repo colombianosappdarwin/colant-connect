@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
 
-function Notifications({ language, setActiveTab }) {
+function Notifications({ language = "es", setActiveTab }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +32,12 @@ function Notifications({ language, setActiveTab }) {
     }
   };
 
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString(
+      language === "es" ? "es-ES" : "en-AU"
+    );
+  };
+
   return (
     <div>
       <button
@@ -41,30 +47,36 @@ function Notifications({ language, setActiveTab }) {
         ← {language === "es" ? "Volver" : "Back"}
       </button>
 
-      <h1 className="text-3xl font-extrabold text-blue-950 mb-2">
-        🔔 {language === "es" ? "Notificaciones" : "Notifications"}
+      <h1 className="mb-2 text-3xl font-extrabold text-blue-950">
+        🔔 {language === "es"
+          ? "Notificaciones"
+          : "Notifications"}
       </h1>
 
-      <p className="text-slate-600 mb-6">
+      <p className="mb-6 text-slate-600">
         {language === "es"
-          ? "Mantente informado sobre eventos y novedades."
-          : "Stay informed about events and community news."}
+          ? "Mantente informado sobre eventos y novedades de la comunidad."
+          : "Stay informed about community events and news."}
       </p>
 
       {loading ? (
-        <div className="text-center py-10">
-          Cargando...
+        <div className="py-10 text-center font-semibold text-slate-600">
+          {language === "es"
+            ? "Cargando..."
+            : "Loading..."}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white rounded-xl shadow p-6 text-center">
-          No hay notificaciones.
+        <div className="rounded-xl bg-white p-6 text-center shadow">
+          {language === "es"
+            ? "No hay notificaciones."
+            : "No notifications available."}
         </div>
       ) : (
         <div className="space-y-4">
           {notifications.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-xl shadow p-5 border"
+              className="rounded-xl border bg-white p-5 shadow"
             >
               <div className="flex gap-3">
                 <div className="text-3xl">
@@ -72,16 +84,16 @@ function Notifications({ language, setActiveTab }) {
                 </div>
 
                 <div className="flex-1">
-                  <h2 className="font-bold text-blue-900 text-lg">
+                  <h2 className="text-lg font-bold text-blue-900">
                     {item.title}
                   </h2>
 
-                  <p className="text-slate-700 mt-2">
+                  <p className="mt-2 text-slate-700">
                     {item.message}
                   </p>
 
-                  <p className="text-xs text-slate-400 mt-3">
-                    {new Date(item.created_at).toLocaleString()}
+                  <p className="mt-3 text-xs text-slate-400">
+                    {formatDate(item.created_at)}
                   </p>
                 </div>
               </div>

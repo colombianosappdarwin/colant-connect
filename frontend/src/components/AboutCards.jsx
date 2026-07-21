@@ -1,34 +1,65 @@
-function AboutCards() {
-  const sections = [
-    {
-      title: "Our Mission",
-      image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722537/our_mision_ehd3ot.webp",
-      text: "At COLANT, we strive to create a welcoming community that promotes diversity, inclusivity, and respect for all. Our mission is to celebrate and promote the rich cultural heritage of Colombia while strengthening the bonds between our two diverse communities."
-    },
-    {
-      title: "Our History",
-      image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722537/our_history_r4gqqe.webp",
-      text: "Founded in Darwin on 20 July 2024, during the Independence Day of Colombia celebration, COLANT began as a small group of like-minded individuals who wanted to make a positive impact in their community."
-    },
-    {
-      title: "Our Activities",
-      image: "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722545/Our_activities_olykuv.webp",
-      text: "We aim to provide a platform for cultural exchange, support, and growth through a variety of initiatives, including cultural and wellbeing events, educational programs, and community outreach."
-    }
-  ]
+function AboutCards({ language = "es" }) {
+  const sections =
+    language === "es"
+      ? [
+          {
+            title: "Nuestra Misión",
+            image:
+              "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722537/our_mision_ehd3ot.webp",
+            text:
+              "En COLANT trabajamos para construir una comunidad acogedora que promueva la diversidad, la inclusión y el respeto por todas las personas. Nuestra misión es celebrar y promover la riqueza de la cultura colombiana mientras fortalecemos los lazos entre Colombia y Australia.",
+          },
+          {
+            title: "Nuestra Historia",
+            image:
+              "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722537/our_history_r4gqqe.webp",
+            text:
+              "COLANT fue fundada en Darwin el 20 de julio de 2024 durante la celebración del Día de la Independencia de Colombia. Nació gracias a un grupo de colombianos comprometidos con generar un impacto positivo y fortalecer la comunidad en el Territorio del Norte.",
+          },
+          {
+            title: "Nuestras Actividades",
+            image:
+              "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722545/Our_activities_olykuv.webp",
+            text:
+              "Promovemos el intercambio cultural, el bienestar y el crecimiento de nuestra comunidad mediante eventos culturales, actividades deportivas, programas educativos, iniciativas sociales y proyectos de integración comunitaria.",
+          },
+        ]
+      : [
+          {
+            title: "Our Mission",
+            image:
+              "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722537/our_mision_ehd3ot.webp",
+            text:
+              "At COLANT, we strive to create a welcoming community that promotes diversity, inclusivity and respect for everyone. Our mission is to celebrate Colombian culture while strengthening the relationship between Colombia and Australia.",
+          },
+          {
+            title: "Our History",
+            image:
+              "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722537/our_history_r4gqqe.webp",
+            text:
+              "Founded in Darwin on 20 July 2024 during Colombia's Independence Day celebration, COLANT began with a group of people committed to creating a stronger and more connected Colombian community in the Northern Territory.",
+          },
+          {
+            title: "Our Activities",
+            image:
+              "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782722545/Our_activities_olykuv.webp",
+            text:
+              "We promote cultural exchange, wellbeing and community growth through festivals, sporting events, educational programs, social initiatives and community engagement activities.",
+          },
+        ];
 
   return (
     <div className="mt-6 grid gap-5">
       {sections.map((item) => (
         <div
           key={item.title}
-          className="bg-white rounded-3xl shadow-lg border border-slate-100 p-5"
+          className="rounded-3xl border border-slate-100 bg-white p-5 shadow-lg"
         >
-          <div className="flex items-center gap-4 mb-5">
+          <div className="mb-5 flex items-center gap-4">
             <img
               src={item.image}
               alt={item.title}
-              className="w-24 h-24 rounded-full object-cover border-4 border-blue-100 shadow-md"
+              className="h-24 w-24 rounded-full border-4 border-blue-100 object-cover shadow-md"
             />
 
             <div>
@@ -36,19 +67,21 @@ function AboutCards() {
                 {item.title}
               </h3>
 
-              <p className="text-blue-700 text-sm font-semibold">
-                Colombian-Australian Association
+              <p className="text-sm font-semibold text-blue-700">
+                {language === "es"
+                  ? "Asociación Colombo-Australiana"
+                  : "Colombian-Australian Association"}
               </p>
             </div>
           </div>
 
-          <p className="text-slate-600 text-[15px] leading-7">
+          <p className="text-[15px] leading-7 text-slate-600">
             {item.text}
           </p>
         </div>
       ))}
     </div>
-  )
+  );
 }
 
-export default AboutCards
+export default AboutCards;

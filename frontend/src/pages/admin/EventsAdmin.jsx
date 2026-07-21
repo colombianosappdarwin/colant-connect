@@ -25,7 +25,10 @@ const emptyForm = {
   image_url: "",
 }
 
-function EventsAdmin({ onEventsUpdated }) {
+function EventsAdmin({
+  onEventsUpdated,
+  language = "es",
+}) {
   const fileInputRef = useRef(null)
 
   const [events, setEvents] = useState([])
@@ -34,13 +37,96 @@ function EventsAdmin({ onEventsUpdated }) {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const translations = {
+    es: {
+      loadError: "Error cargando los eventos",
+      invalidImage: "Selecciona una imagen válida.",
+      imageRequired: "Selecciona la imagen principal del evento.",
+      updatedSuccess: "Evento actualizado correctamente",
+      createdSuccess: "Evento creado correctamente",
+      saveError: "Error guardando el evento",
+      deleteConfirm: "¿Quieres eliminar este evento?",
+      deleteError: "Error eliminando el evento",
+      noDate: "Sin fecha",
+      content: "Contenido",
+      title: "Eventos",
+      subtitle: "Crea, edita y publica los eventos de la comunidad.",
+      cancel: "Cancelar",
+      createEvent: "Crear evento",
+      editEvent: "Editar evento",
+      newEvent: "Nuevo evento",
+      formDescription: "Completa la información que verá la comunidad.",
+      mainImage: "Imagen principal",
+      imageAlt: "Imagen del evento",
+      changeImage: "Cambiar imagen",
+      selectImage: "Seleccionar imagen",
+      eventTitle: "Título del evento",
+      eventTitlePlaceholder: "Ejemplo: Colombia Florece",
+      description: "Descripción",
+      descriptionPlaceholder: "Describe brevemente el evento",
+      location: "Ubicación",
+      locationPlaceholder: "Ejemplo: Darwin Waterfront",
+      dateTime: "Fecha y hora",
+      saving: "Guardando...",
+      updateEvent: "Actualizar evento",
+      publishEvent: "Publicar evento",
+      publishedEvents: "Eventos publicados",
+      eventSingular: "evento",
+      eventPlural: "eventos",
+      noEvents: "No hay eventos creados",
+      edit: "Editar",
+      delete: "Eliminar",
+    },
+    en: {
+      loadError: "Error loading events",
+      invalidImage: "Select a valid image.",
+      imageRequired: "Select the main event image.",
+      updatedSuccess: "Event updated successfully",
+      createdSuccess: "Event created successfully",
+      saveError: "Error saving the event",
+      deleteConfirm: "Do you want to delete this event?",
+      deleteError: "Error deleting the event",
+      noDate: "No date",
+      content: "Content",
+      title: "Events",
+      subtitle: "Create, edit and publish community events.",
+      cancel: "Cancel",
+      createEvent: "Create event",
+      editEvent: "Edit event",
+      newEvent: "New event",
+      formDescription: "Complete the information the community will see.",
+      mainImage: "Main image",
+      imageAlt: "Event image",
+      changeImage: "Change image",
+      selectImage: "Select image",
+      eventTitle: "Event title",
+      eventTitlePlaceholder: "Example: Colombia Florece",
+      description: "Description",
+      descriptionPlaceholder: "Briefly describe the event",
+      location: "Location",
+      locationPlaceholder: "Example: Darwin Waterfront",
+      dateTime: "Date and time",
+      saving: "Saving...",
+      updateEvent: "Update event",
+      publishEvent: "Publish event",
+      publishedEvents: "Published events",
+      eventSingular: "event",
+      eventPlural: "events",
+      noEvents: "No events created",
+      edit: "Edit",
+      delete: "Delete",
+    },
+  }
+
+  const t = translations[language] || translations.es
+
   const loadEvents = async () => {
     try {
       const data = await getEvents()
       setEvents(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error(error)
-      alert("Error cargando los eventos")
+      alert(t.loadError)
     }
   }
 
@@ -59,7 +145,6 @@ function EventsAdmin({ onEventsUpdated }) {
 
   const resetForm = () => {
     clearPreview()
-
     setFormData(emptyForm)
     setEditingId(null)
     setShowForm(false)
@@ -88,7 +173,7 @@ function EventsAdmin({ onEventsUpdated }) {
     if (!file) return
 
     if (!file.type.startsWith("image/")) {
-      alert("Selecciona una imagen válida.")
+      alert(t.invalidImage)
       return
     }
 
@@ -105,7 +190,7 @@ function EventsAdmin({ onEventsUpdated }) {
     event.preventDefault()
 
     if (!editingId && !formData.image) {
-      alert("Selecciona la imagen principal del evento.")
+      alert(t.imageRequired)
       return
     }
 
@@ -127,8 +212,8 @@ function EventsAdmin({ onEventsUpdated }) {
 
       alert(
         wasEditing
-          ? "Evento actualizado correctamente"
-          : "Evento creado correctamente"
+          ? t.updatedSuccess
+          : t.createdSuccess
       )
     } catch (error) {
       console.error(
@@ -136,7 +221,7 @@ function EventsAdmin({ onEventsUpdated }) {
         error?.response?.data || error
       )
 
-      alert("Error guardando el evento")
+      alert(t.saveError)
     } finally {
       setSaving(false)
     }
@@ -144,7 +229,6 @@ function EventsAdmin({ onEventsUpdated }) {
 
   const handleEdit = (event) => {
     clearPreview()
-
     setEditingId(event.id)
 
     setFormData({
@@ -168,7 +252,7 @@ function EventsAdmin({ onEventsUpdated }) {
 
   const handleDelete = async (eventId) => {
     const confirmDelete = window.confirm(
-      "¿Quieres eliminar este evento?"
+      t.deleteConfirm
     )
 
     if (!confirmDelete) return
@@ -179,12 +263,12 @@ function EventsAdmin({ onEventsUpdated }) {
       await onEventsUpdated?.()
     } catch (error) {
       console.error(error)
-      alert("Error eliminando el evento")
+      alert(t.deleteError)
     }
   }
 
   const formatDate = (dateValue) => {
-    if (!dateValue) return "Sin fecha"
+    if (!dateValue) return t.noDate
 
     const date = new Date(dateValue)
 
@@ -192,29 +276,37 @@ function EventsAdmin({ onEventsUpdated }) {
       return dateValue
     }
 
-    return new Intl.DateTimeFormat("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(date)
+    return new Intl.DateTimeFormat(
+      language === "es" ? "es-ES" : "en-AU",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    ).format(date)
   }
+
+  const eventCountLabel =
+    events.length === 1
+      ? t.eventSingular
+      : t.eventPlural
 
   return (
     <div className="space-y-6">
       <section className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-            Contenido
+            {t.content}
           </p>
 
           <h1 className="mt-1 text-3xl font-extrabold text-slate-950">
-            Eventos
+            {t.title}
           </h1>
 
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            Crea, edita y publica los eventos de la comunidad.
+            {t.subtitle}
           </p>
         </div>
 
@@ -234,12 +326,12 @@ function EventsAdmin({ onEventsUpdated }) {
           {showForm ? (
             <>
               <X size={18} />
-              Cancelar
+              {t.cancel}
             </>
           ) : (
             <>
               <Plus size={18} />
-              Crear evento
+              {t.createEvent}
             </>
           )}
         </button>
@@ -252,25 +344,25 @@ function EventsAdmin({ onEventsUpdated }) {
         >
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-lg font-extrabold text-slate-950">
-              {editingId ? "Editar evento" : "Nuevo evento"}
+              {editingId ? t.editEvent : t.newEvent}
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Completa la información que verá la comunidad.
+              {t.formDescription}
             </p>
           </div>
 
           <div className="space-y-5 p-5">
             <div>
               <label className="text-sm font-bold text-slate-700">
-                Imagen principal
+                {t.mainImage}
               </label>
 
               {formData.image_url ? (
                 <div className="relative mt-2 overflow-hidden rounded-2xl border border-slate-200">
                   <img
                     src={formData.image_url}
-                    alt="Imagen del evento"
+                    alt={t.imageAlt}
                     className="h-52 w-full object-cover"
                   />
 
@@ -280,7 +372,7 @@ function EventsAdmin({ onEventsUpdated }) {
                     className="absolute bottom-3 right-3 flex items-center gap-2 rounded-xl bg-black/75 px-4 py-2 text-sm font-bold text-white backdrop-blur"
                   >
                     <Camera size={17} />
-                    Cambiar imagen
+                    {t.changeImage}
                   </button>
                 </div>
               ) : (
@@ -292,11 +384,11 @@ function EventsAdmin({ onEventsUpdated }) {
                   <Camera size={30} />
 
                   <span className="mt-3 font-bold text-slate-700">
-                    Seleccionar imagen
+                    {t.selectImage}
                   </span>
 
                   <span className="mt-1 text-xs">
-                    JPG, PNG o WEBP
+                    JPG, PNG or WEBP
                   </span>
                 </button>
               )}
@@ -312,13 +404,13 @@ function EventsAdmin({ onEventsUpdated }) {
 
             <div>
               <label className="text-sm font-bold text-slate-700">
-                Título del evento
+                {t.eventTitle}
               </label>
 
               <input
                 name="title"
                 type="text"
-                placeholder="Ejemplo: Colombia Florece"
+                placeholder={t.eventTitlePlaceholder}
                 value={formData.title}
                 onChange={handleChange}
                 className="mt-2 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
@@ -328,12 +420,12 @@ function EventsAdmin({ onEventsUpdated }) {
 
             <div>
               <label className="text-sm font-bold text-slate-700">
-                Descripción
+                {t.description}
               </label>
 
               <textarea
                 name="description"
-                placeholder="Describe brevemente el evento"
+                placeholder={t.descriptionPlaceholder}
                 value={formData.description}
                 onChange={handleChange}
                 className="mt-2 min-h-32 w-full resize-none rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
@@ -343,7 +435,7 @@ function EventsAdmin({ onEventsUpdated }) {
 
             <div>
               <label className="text-sm font-bold text-slate-700">
-                Ubicación
+                {t.location}
               </label>
 
               <div className="relative mt-2">
@@ -355,7 +447,7 @@ function EventsAdmin({ onEventsUpdated }) {
                 <input
                   name="location"
                   type="text"
-                  placeholder="Ejemplo: Darwin Waterfront"
+                  placeholder={t.locationPlaceholder}
                   value={formData.location}
                   onChange={handleChange}
                   className="w-full rounded-2xl border border-slate-200 py-4 pl-12 pr-4 outline-none transition focus:border-slate-400"
@@ -366,7 +458,7 @@ function EventsAdmin({ onEventsUpdated }) {
 
             <div>
               <label className="text-sm font-bold text-slate-700">
-                Fecha y hora
+                {t.dateTime}
               </label>
 
               <div className="relative mt-2">
@@ -392,10 +484,10 @@ function EventsAdmin({ onEventsUpdated }) {
               className="w-full rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
             >
               {saving
-                ? "Guardando..."
+                ? t.saving
                 : editingId
-                  ? "Actualizar evento"
-                  : "Publicar evento"}
+                  ? t.updateEvent
+                  : t.publishEvent}
             </button>
           </div>
         </form>
@@ -404,11 +496,11 @@ function EventsAdmin({ onEventsUpdated }) {
       <section>
         <div className="mb-4">
           <h2 className="text-xl font-extrabold text-slate-950">
-            Eventos publicados
+            {t.publishedEvents}
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            {events.length} evento{events.length === 1 ? "" : "s"}
+            {events.length} {eventCountLabel}
           </p>
         </div>
 
@@ -420,7 +512,7 @@ function EventsAdmin({ onEventsUpdated }) {
             />
 
             <p className="mt-3 font-bold text-slate-800">
-              No hay eventos creados
+              {t.noEvents}
             </p>
           </div>
         ) : (
@@ -468,7 +560,7 @@ function EventsAdmin({ onEventsUpdated }) {
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 font-bold text-slate-700 transition hover:bg-slate-50"
                     >
                       <Edit3 size={17} />
-                      Editar
+                      {t.edit}
                     </button>
 
                     <button
@@ -477,7 +569,7 @@ function EventsAdmin({ onEventsUpdated }) {
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-bold text-white transition hover:bg-red-700"
                     >
                       <Trash2 size={17} />
-                      Eliminar
+                      {t.delete}
                     </button>
                   </div>
                 </div>

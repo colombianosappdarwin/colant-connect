@@ -14,13 +14,178 @@ const INITIAL_FORM = {
   is_active: true,
 }
 
-function NotificationsAdmin() {
+function NotificationsAdmin({ language = "es" }) {
   const [notifications, setNotifications] = useState([])
   const [form, setForm] = useState(INITIAL_FORM)
   const [editingId, setEditingId] = useState(null)
   const [loadingList, setLoadingList] = useState(true)
   const [saving, setSaving] = useState(false)
   const [actionId, setActionId] = useState(null)
+
+  const translations = {
+    es: {
+      loadError: "Error cargando las notificaciones.",
+      completeFields: "Completa el título y el mensaje.",
+      updatedSuccess: "Notificación actualizada correctamente.",
+      draftSaved: "Notificación guardada como borrador.",
+      saveError: "Error guardando la notificación.",
+      sendConfirm: (title) => `¿Enviar "${title}" ahora?`,
+      deliveryCompleted: "Envío de la notificación completado.",
+      pushSent: "Notificaciones push enviadas",
+      emailSent: "Correos enviados",
+      status: "Estado",
+      sentStatus: "enviada",
+      sendError: "Error enviando la notificación.",
+      reminderConfirm: (title) =>
+        `¿Enviar un recordatorio para "${title}"?`,
+      reminderCompleted: "Recordatorio completado.",
+      reminderError: "Error enviando el recordatorio.",
+      visibilityError:
+        "Error cambiando la visibilidad de la notificación.",
+      deleteConfirm: (title) =>
+        `¿Eliminar "${title}" permanentemente?`,
+      deleteError: "Error eliminando la notificación.",
+      notSentYet: "Aún no enviada",
+      adminPanel: "Panel de administración",
+      notificationCenter: "Centro de notificaciones",
+      intro:
+        "Crea, edita y envía manualmente comunicaciones para la comunidad.",
+      total: "Total",
+      drafts: "Borradores",
+      sent: "Enviadas",
+      active: "Activas",
+      editNotification: "Editar notificación",
+      createNotification: "Crear notificación",
+      saveDoesNotSend:
+        "Guardar no envía la notificación automáticamente.",
+      cancel: "Cancelar",
+      title: "Título",
+      titlePlaceholder: "Título de la notificación",
+      message: "Mensaje",
+      messagePlaceholder: "Escribe el mensaje para la comunidad",
+      category: "Categoría",
+      general: "General",
+      event: "Evento",
+      important: "Importante",
+      priority: "Prioridad",
+      normal: "Normal",
+      high: "Alta",
+      urgent: "Urgente",
+      deliveryChannels: "Canales de envío",
+      inApp: "Dentro de la app",
+      inAppDescription: "Visible en notificaciones",
+      push: "Push",
+      pushDescription: "Enviar a dispositivos registrados",
+      email: "Correo",
+      emailDescription: "Enviar mediante Resend",
+      saving: "Guardando...",
+      saveChanges: "Guardar cambios",
+      saveDraft: "Guardar borrador",
+      history: "Historial de notificaciones",
+      historyDescription:
+        "Envía, recuerda, edita o elimina las notificaciones guardadas.",
+      loading: "Cargando notificaciones...",
+      noNotifications: "Todavía no hay notificaciones",
+      noNotificationsDescription:
+        "Crea tu primera notificación en el formulario anterior.",
+      hidden: "Oculta",
+      users: "Usuarios",
+      emailsSent: "Correos enviados",
+      created: "Creada",
+      working: "Procesando...",
+      send: "Enviar",
+      reminder: "Recordatorio",
+      edit: "Editar",
+      hide: "Ocultar",
+      show: "Mostrar",
+      delete: "Eliminar",
+      draft: "Borrador",
+      partiallySent: "Enviada parcialmente",
+      failed: "Fallida",
+    },
+    en: {
+      loadError: "Error loading notifications.",
+      completeFields: "Please complete the title and message.",
+      updatedSuccess: "Notification updated successfully.",
+      draftSaved: "Notification saved as draft.",
+      saveError: "Error saving notification.",
+      sendConfirm: (title) => `Send "${title}" now?`,
+      deliveryCompleted: "Notification delivery completed.",
+      pushSent: "Push sent",
+      emailSent: "Email sent",
+      status: "Status",
+      sentStatus: "sent",
+      sendError: "Error sending notification.",
+      reminderConfirm: (title) =>
+        `Send a reminder for "${title}"?`,
+      reminderCompleted: "Reminder completed.",
+      reminderError: "Error sending reminder.",
+      visibilityError:
+        "Error changing notification visibility.",
+      deleteConfirm: (title) =>
+        `Delete "${title}" permanently?`,
+      deleteError: "Error deleting notification.",
+      notSentYet: "Not sent yet",
+      adminPanel: "Administration panel",
+      notificationCenter: "Notification Center",
+      intro:
+        "Create, edit and manually send community communications.",
+      total: "Total",
+      drafts: "Drafts",
+      sent: "Sent",
+      active: "Active",
+      editNotification: "Edit notification",
+      createNotification: "Create notification",
+      saveDoesNotSend:
+        "Saving does not send the notification automatically.",
+      cancel: "Cancel",
+      title: "Title",
+      titlePlaceholder: "Notification title",
+      message: "Message",
+      messagePlaceholder: "Write the message for the community",
+      category: "Category",
+      general: "General",
+      event: "Event",
+      important: "Important",
+      priority: "Priority",
+      normal: "Normal",
+      high: "High",
+      urgent: "Urgent",
+      deliveryChannels: "Delivery channels",
+      inApp: "In app",
+      inAppDescription: "Visible in notifications",
+      push: "Push",
+      pushDescription: "Send to registered devices",
+      email: "Email",
+      emailDescription: "Send with Resend",
+      saving: "Saving...",
+      saveChanges: "Save changes",
+      saveDraft: "Save draft",
+      history: "Notification history",
+      historyDescription:
+        "Send, remind, edit or remove saved notifications.",
+      loading: "Loading notifications...",
+      noNotifications: "No notifications yet",
+      noNotificationsDescription:
+        "Create your first notification above.",
+      hidden: "Hidden",
+      users: "Users",
+      emailsSent: "Emails sent",
+      created: "Created",
+      working: "Working...",
+      send: "Send",
+      reminder: "Reminder",
+      edit: "Edit",
+      hide: "Hide",
+      show: "Show",
+      delete: "Delete",
+      draft: "Draft",
+      partiallySent: "Partially sent",
+      failed: "Failed",
+    },
+  }
+
+  const t = translations[language] || translations.es
 
   useEffect(() => {
     loadNotifications()
@@ -39,7 +204,7 @@ function NotificationsAdmin() {
       )
     } catch (error) {
       console.error("LOAD NOTIFICATIONS ERROR:", error)
-      alert(getErrorMessage(error, "Error loading notifications."))
+      alert(getErrorMessage(error, t.loadError))
     } finally {
       setLoadingList(false)
     }
@@ -70,7 +235,7 @@ function NotificationsAdmin() {
     event.preventDefault()
 
     if (!form.title.trim() || !form.message.trim()) {
-      alert("Please complete the title and message.")
+      alert(t.completeFields)
       return
     }
 
@@ -96,7 +261,7 @@ function NotificationsAdmin() {
           payload
         )
 
-        alert("Notification updated successfully.")
+        alert(t.updatedSuccess)
       } else {
         await axios.post(
           `${API_URL}/notifications/`,
@@ -106,14 +271,14 @@ function NotificationsAdmin() {
           }
         )
 
-        alert("Notification saved as draft.")
+        alert(t.draftSaved)
       }
 
       resetForm()
       await loadNotifications()
     } catch (error) {
       console.error("SAVE NOTIFICATION ERROR:", error)
-      alert(getErrorMessage(error, "Error saving notification."))
+      alert(getErrorMessage(error, t.saveError))
     } finally {
       setSaving(false)
     }
@@ -142,7 +307,7 @@ function NotificationsAdmin() {
 
   const sendNotification = async (item) => {
     const confirmed = window.confirm(
-      `Send "${item.title}" now?`
+      t.sendConfirm(item.title)
     )
 
     if (!confirmed) return
@@ -162,17 +327,17 @@ function NotificationsAdmin() {
 
       alert(
         [
-          "Notification delivery completed.",
-          `Push sent: ${result.push_sent || 0}`,
-          `Email sent: ${result.email_sent || 0}`,
-          `Status: ${result.status || "sent"}`,
+          t.deliveryCompleted,
+          `${t.pushSent}: ${result.push_sent || 0}`,
+          `${t.emailSent}: ${result.email_sent || 0}`,
+          `${t.status}: ${result.status || t.sentStatus}`,
         ].join("\n")
       )
 
       await loadNotifications()
     } catch (error) {
       console.error("SEND NOTIFICATION ERROR:", error)
-      alert(getErrorMessage(error, "Error sending notification."))
+      alert(getErrorMessage(error, t.sendError))
     } finally {
       setActionId(null)
     }
@@ -180,7 +345,7 @@ function NotificationsAdmin() {
 
   const sendReminder = async (item) => {
     const confirmed = window.confirm(
-      `Send a reminder for "${item.title}"?`
+      t.reminderConfirm(item.title)
     )
 
     if (!confirmed) return
@@ -200,16 +365,16 @@ function NotificationsAdmin() {
 
       alert(
         [
-          "Reminder completed.",
-          `Push sent: ${result.push_sent || 0}`,
-          `Email sent: ${result.email_sent || 0}`,
+          t.reminderCompleted,
+          `${t.pushSent}: ${result.push_sent || 0}`,
+          `${t.emailSent}: ${result.email_sent || 0}`,
         ].join("\n")
       )
 
       await loadNotifications()
     } catch (error) {
       console.error("SEND REMINDER ERROR:", error)
-      alert(getErrorMessage(error, "Error sending reminder."))
+      alert(getErrorMessage(error, t.reminderError))
     } finally {
       setActionId(null)
     }
@@ -232,7 +397,7 @@ function NotificationsAdmin() {
       alert(
         getErrorMessage(
           error,
-          "Error changing notification visibility."
+          t.visibilityError
         )
       )
     } finally {
@@ -242,7 +407,7 @@ function NotificationsAdmin() {
 
   const deleteNotification = async (item) => {
     const confirmed = window.confirm(
-      `Delete "${item.title}" permanently?`
+      t.deleteConfirm(item.title)
     )
 
     if (!confirmed) return
@@ -261,7 +426,7 @@ function NotificationsAdmin() {
       await loadNotifications()
     } catch (error) {
       console.error("DELETE ERROR:", error)
-      alert(getErrorMessage(error, "Error deleting notification."))
+      alert(getErrorMessage(error, t.deleteError))
     } finally {
       setActionId(null)
     }
@@ -308,32 +473,68 @@ function NotificationsAdmin() {
     }
   }
 
+  const translateCategory = (value) => {
+    switch (value) {
+      case "evento":
+      case "event":
+        return t.event
+      case "importante":
+      case "important":
+        return t.important
+      default:
+        return t.general
+    }
+  }
+
+  const translateStatus = (value) => {
+    switch (value) {
+      case "sent":
+        return t.sent
+      case "partially_sent":
+        return t.partiallySent
+      case "failed":
+        return t.failed
+      default:
+        return t.draft
+    }
+  }
+
   const formatDate = (date) => {
-    if (!date) return "Not sent yet"
-    return new Date(date).toLocaleString()
+    if (!date) return t.notSentYet
+
+    return new Intl.DateTimeFormat(
+      language === "es" ? "es-AU" : "en-AU",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }
+    ).format(new Date(date))
   }
 
   return (
     <div className="space-y-8 pb-12">
       <section>
         <p className="text-xs font-bold uppercase tracking-widest text-blue-700">
-          Administration panel
+          {t.adminPanel}
         </p>
 
         <h1 className="mt-2 text-3xl font-extrabold text-blue-950">
-          Notification Center
+          {t.notificationCenter}
         </h1>
 
         <p className="mt-2 text-sm text-slate-600">
-          Create, edit and manually send community communications.
+          {t.intro}
         </p>
       </section>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Total" value={stats.total} icon="🔔" />
-        <StatCard label="Drafts" value={stats.drafts} icon="📝" />
-        <StatCard label="Sent" value={stats.sent} icon="✅" />
-        <StatCard label="Active" value={stats.active} icon="👁️" />
+        <StatCard label={t.total} value={stats.total} icon="🔔" />
+        <StatCard label={t.drafts} value={stats.drafts} icon="📝" />
+        <StatCard label={t.sent} value={stats.sent} icon="✅" />
+        <StatCard label={t.active} value={stats.active} icon="👁️" />
       </section>
 
       <form
@@ -344,12 +545,12 @@ function NotificationsAdmin() {
           <div>
             <h2 className="text-xl font-extrabold text-blue-950">
               {editingId
-                ? "Edit notification"
-                : "Create notification"}
+                ? t.editNotification
+                : t.createNotification}
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Saving does not send the notification automatically.
+              {t.saveDoesNotSend}
             </p>
           </div>
 
@@ -359,13 +560,13 @@ function NotificationsAdmin() {
               onClick={resetForm}
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700"
             >
-              Cancel
+              {t.cancel}
             </button>
           )}
         </div>
 
         <div className="space-y-4">
-          <Field label="Title">
+          <Field label={t.title}>
             <input
               type="text"
               value={form.title}
@@ -373,27 +574,27 @@ function NotificationsAdmin() {
                 updateForm("title", event.target.value)
               }
               maxLength={150}
-              placeholder="Notification title"
+              placeholder={t.titlePlaceholder}
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               required
             />
           </Field>
 
-          <Field label="Message">
+          <Field label={t.message}>
             <textarea
               value={form.message}
               onChange={(event) =>
                 updateForm("message", event.target.value)
               }
               rows={5}
-              placeholder="Write the message for the community"
+              placeholder={t.messagePlaceholder}
               className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               required
             />
           </Field>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Category">
+            <Field label={t.category}>
               <select
                 value={form.category}
                 onChange={(event) => {
@@ -402,13 +603,13 @@ function NotificationsAdmin() {
                 }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
               >
-                <option value="general">General</option>
-                <option value="evento">Event</option>
-                <option value="importante">Important</option>
+                <option value="general">{t.general}</option>
+                <option value="evento">{t.event}</option>
+                <option value="importante">{t.important}</option>
               </select>
             </Field>
 
-            <Field label="Priority">
+            <Field label={t.priority}>
               <select
                 value={form.priority}
                 onChange={(event) =>
@@ -416,22 +617,22 @@ function NotificationsAdmin() {
                 }
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
               >
-                <option value="normal">Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
+                <option value="normal">{t.normal}</option>
+                <option value="high">{t.high}</option>
+                <option value="urgent">{t.urgent}</option>
               </select>
             </Field>
           </div>
 
           <div>
             <p className="mb-3 text-sm font-bold text-slate-700">
-              Delivery channels
+              {t.deliveryChannels}
             </p>
 
             <div className="grid gap-3 md:grid-cols-3">
               <ChannelToggle
-                label="In app"
-                description="Visible in notifications"
+                label={t.inApp}
+                description={t.inAppDescription}
                 checked={form.send_in_app}
                 onChange={(value) =>
                   updateForm("send_in_app", value)
@@ -439,8 +640,8 @@ function NotificationsAdmin() {
               />
 
               <ChannelToggle
-                label="Push"
-                description="Send to registered devices"
+                label={t.push}
+                description={t.pushDescription}
                 checked={form.send_push}
                 onChange={(value) =>
                   updateForm("send_push", value)
@@ -448,8 +649,8 @@ function NotificationsAdmin() {
               />
 
               <ChannelToggle
-                label="Email"
-                description="Send with Resend"
+                label={t.email}
+                description={t.emailDescription}
                 checked={form.send_email}
                 onChange={(value) =>
                   updateForm("send_email", value)
@@ -464,10 +665,10 @@ function NotificationsAdmin() {
             className="w-full rounded-xl bg-blue-700 px-5 py-3 font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {saving
-              ? "Saving..."
+              ? t.saving
               : editingId
-                ? "Save changes"
-                : "Save draft"}
+                ? t.saveChanges
+                : t.saveDraft}
           </button>
         </div>
       </form>
@@ -475,26 +676,26 @@ function NotificationsAdmin() {
       <section>
         <div className="mb-4">
           <h2 className="text-xl font-extrabold text-blue-950">
-            Notification history
+            {t.history}
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Send, remind, edit or remove saved notifications.
+            {t.historyDescription}
           </p>
         </div>
 
         {loadingList ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
-            Loading notifications...
+            {t.loading}
           </div>
         ) : notifications.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
             <p className="font-bold text-slate-700">
-              No notifications yet
+              {t.noNotifications}
             </p>
 
             <p className="mt-1 text-sm text-slate-500">
-              Create your first notification above.
+              {t.noNotificationsDescription}
             </p>
           </div>
         ) : (
@@ -518,7 +719,7 @@ function NotificationsAdmin() {
                             itemCategory
                           )}`}
                         >
-                          {itemCategory}
+                          {translateCategory(itemCategory)}
                         </span>
 
                         <span
@@ -526,12 +727,12 @@ function NotificationsAdmin() {
                             itemStatus
                           )}`}
                         >
-                          {itemStatus.replace("_", " ")}
+                          {translateStatus(itemStatus)}
                         </span>
 
                         {!item.is_active && (
                           <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold text-slate-600">
-                            Hidden
+                            {t.hidden}
                           </span>
                         )}
                       </div>
@@ -547,54 +748,54 @@ function NotificationsAdmin() {
 
                     <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 md:grid-cols-4">
                       <DeliveryStat
-                        label="Users"
+                        label={t.users}
                         value={item.total_users || 0}
                       />
                       <DeliveryStat
-                        label="Push sent"
+                        label={t.pushSent}
                         value={item.push_sent || 0}
                       />
                       <DeliveryStat
-                        label="Emails sent"
+                        label={t.emailsSent}
                         value={item.email_sent || 0}
                       />
                       <DeliveryStat
-                        label="Created"
+                        label={t.created}
                         value={formatDate(item.created_at)}
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
                       <ActionButton
-                        label={busy ? "Working..." : "Send"}
+                        label={busy ? t.working : t.send}
                         onClick={() => sendNotification(item)}
                         disabled={busy}
                         className="bg-blue-700 text-white hover:bg-blue-800"
                       />
 
                       <ActionButton
-                        label="Reminder"
+                        label={t.reminder}
                         onClick={() => sendReminder(item)}
                         disabled={busy}
                         className="bg-amber-500 text-white hover:bg-amber-600"
                       />
 
                       <ActionButton
-                        label="Edit"
+                        label={t.edit}
                         onClick={() => editNotification(item)}
                         disabled={busy}
                         className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                       />
 
                       <ActionButton
-                        label={item.is_active ? "Hide" : "Show"}
+                        label={item.is_active ? t.hide : t.show}
                         onClick={() => toggleVisibility(item)}
                         disabled={busy}
                         className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                       />
 
                       <ActionButton
-                        label="Delete"
+                        label={t.delete}
                         onClick={() => deleteNotification(item)}
                         disabled={busy}
                         className="bg-rose-600 text-white hover:bg-rose-700"

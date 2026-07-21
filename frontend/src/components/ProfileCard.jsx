@@ -3,17 +3,39 @@ function ProfileCard({
   onEditProfile,
   onAdminClick,
   onLogout,
+  language = "es",
 }) {
   const isAdmin =
     userProfile?.role === "admin" ||
     userProfile?.role === "super_admin";
+
+  const t = {
+    es: {
+      settings: "Configuración",
+      welcome: "Bienvenido",
+      user: "Usuario",
+      profile: "Mi perfil",
+      admin: "Panel de administrador",
+      logout: "Cerrar sesión",
+      profileAlt: "Perfil",
+    },
+    en: {
+      settings: "Settings",
+      welcome: "Welcome",
+      user: "User",
+      profile: "My Profile",
+      admin: "Administrator Panel",
+      logout: "Sign Out",
+      profileAlt: "Profile",
+    },
+  }[language];
 
   return (
     <div className="bg-white min-h-[calc(100vh-110px)]">
       {/* Header */}
       <div className="bg-slate-950 text-white px-6 pt-10 pb-24 rounded-b-[32px]">
         <h2 className="text-3xl font-extrabold mb-8">
-          Settings
+          {t.settings}
         </h2>
 
         <div className="flex items-center gap-4">
@@ -21,7 +43,7 @@ function ProfileCard({
             {userProfile?.profile_photo_url ? (
               <img
                 src={userProfile.profile_photo_url}
-                alt="Profile"
+                alt={t.profileAlt}
                 className="w-20 h-20 rounded-full object-cover"
               />
             ) : (
@@ -31,11 +53,11 @@ function ProfileCard({
 
           <div>
             <p className="text-slate-300 text-sm">
-              Welcome
+              {t.welcome}
             </p>
 
             <h3 className="text-xl font-bold">
-              {userProfile?.full_name || "User"}
+              {userProfile?.full_name || t.user}
             </h3>
 
             <p className="text-slate-300 text-sm">
@@ -60,7 +82,7 @@ function ProfileCard({
             </div>
 
             <span className="font-bold text-lg text-slate-900">
-              My Profile
+              {t.profile}
             </span>
           </div>
 
@@ -82,7 +104,7 @@ function ProfileCard({
               </div>
 
               <span className="font-bold text-lg text-slate-900">
-                Administrator Panel
+                {t.admin}
               </span>
             </div>
 
@@ -104,7 +126,7 @@ function ProfileCard({
             </div>
 
             <span className="font-bold text-lg text-red-500">
-              Sign Out
+              {t.logout}
             </span>
           </div>
 

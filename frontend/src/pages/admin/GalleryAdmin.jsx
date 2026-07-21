@@ -17,7 +17,7 @@ import { API_URL } from "../../config"
 const CLOUD_NAME = "dtlmi9fgx"
 const UPLOAD_PRESET = "colant_profiles"
 
-function GalleryAdmin() {
+function GalleryAdmin({ language = "es" }) {
   const fileInputRef = useRef(null)
 
   const [albums, setAlbums] = useState([])
@@ -42,6 +42,152 @@ function GalleryAdmin() {
     total: 0,
   })
 
+  const translations = {
+    es: {
+      dateUnavailable: "Fecha no disponible",
+      loadAlbumsError: "Error cargando los álbumes",
+      loadPhotosError: "Error cargando las fotografías",
+      albumNameRequired: "Escribe el nombre del álbum.",
+      albumLocationRequired: "Escribe el lugar del álbum.",
+      albumDateRequired: "Selecciona la fecha del álbum.",
+      albumCreated: "Álbum creado correctamente",
+      albumCreateError: "Error creando el álbum",
+      deleteAlbumConfirm: (title) =>
+        `¿Quieres eliminar el álbum "${title}" y todas sus fotografías?`,
+      albumDeleted: "Álbum eliminado correctamente",
+      albumDeleteError: "Error eliminando el álbum",
+      imagesOnly: "Solo puedes seleccionar archivos de imagen.",
+      noAlbumSelected: "No hay un álbum seleccionado.",
+      cloudinaryNoUrl: "Cloudinary no devolvió la URL de la imagen.",
+      selectAlbumFirst: "Selecciona primero un álbum.",
+      selectPhotos: "Selecciona una o varias fotografías.",
+      photosPublished: "Fotografías publicadas correctamente",
+      uploadPhotosError: "Error subiendo las fotografías",
+      deletePhotoConfirm: "¿Quieres eliminar esta fotografía?",
+      deletePhotoError: "Error eliminando la fotografía",
+      content: "Contenido",
+      gallery: "Galería",
+      intro:
+        "Crea álbumes y publica fotografías directamente desde tu teléfono o computador.",
+      createAlbum: "Crear álbum",
+      createAlbumDescription:
+        "Crea una nueva colección para organizar las fotografías.",
+      albumName: "Nombre del álbum",
+      albumNamePlaceholder: "Ejemplo: Colombia Florece 2026",
+      description: "Descripción",
+      descriptionPlaceholder: "Describe brevemente este álbum",
+      place: "Lugar",
+      placePlaceholder: "Ejemplo: Darwin Waterfront",
+      date: "Fecha",
+      creating: "Creando...",
+      selectAlbum: "Seleccionar álbum",
+      selectAlbumDescription:
+        "Selecciona el álbum que quieres administrar.",
+      loadingAlbums: "Cargando álbumes...",
+      noAlbums: "Todavía no hay álbumes",
+      noAlbumsDescription:
+        "Crea tu primer álbum usando el formulario anterior.",
+      chooseAlbum: "Selecciona un álbum",
+      photo: "foto",
+      photos: "fotos",
+      placeUnavailable: "Lugar no disponible",
+      photograph: "fotografía",
+      photographs: "fotografías",
+      deleteAlbum: "Eliminar álbum",
+      uploadPhotos: "Subir fotografías",
+      uploadPhotosDescription:
+        "Puedes seleccionar varias imágenes al mismo tiempo.",
+      selectPhotographs: "Seleccionar fotografías",
+      fromPhone: "Desde la cámara o galería del teléfono",
+      image: "imagen",
+      images: "imágenes",
+      selected: "seleccionada",
+      selectedPlural: "seleccionadas",
+      remove: "Quitar",
+      preview: "Vista previa",
+      uploadingPhotos: "Subiendo fotografías",
+      publishing: "Publicando...",
+      publishPhotos: "Publicar fotografías",
+      publishedPhotos: "Fotografías publicadas",
+      loadingPhotos: "Cargando fotografías...",
+      emptyAlbum: "Este álbum todavía no tiene fotografías",
+      photoAlt: "Fotografía",
+      delete: "Eliminar",
+    },
+    en: {
+      dateUnavailable: "Date unavailable",
+      loadAlbumsError: "Error loading albums",
+      loadPhotosError: "Error loading photos",
+      albumNameRequired: "Enter the album name.",
+      albumLocationRequired: "Enter the album location.",
+      albumDateRequired: "Select the album date.",
+      albumCreated: "Album created successfully",
+      albumCreateError: "Error creating the album",
+      deleteAlbumConfirm: (title) =>
+        `Do you want to delete the album "${title}" and all its photos?`,
+      albumDeleted: "Album deleted successfully",
+      albumDeleteError: "Error deleting the album",
+      imagesOnly: "You can only select image files.",
+      noAlbumSelected: "No album is selected.",
+      cloudinaryNoUrl: "Cloudinary did not return the image URL.",
+      selectAlbumFirst: "Select an album first.",
+      selectPhotos: "Select one or more photos.",
+      photosPublished: "Photos published successfully",
+      uploadPhotosError: "Error uploading photos",
+      deletePhotoConfirm: "Do you want to delete this photo?",
+      deletePhotoError: "Error deleting the photo",
+      content: "Content",
+      gallery: "Gallery",
+      intro:
+        "Create albums and publish photos directly from your phone or computer.",
+      createAlbum: "Create album",
+      createAlbumDescription:
+        "Create a new collection to organise your photos.",
+      albumName: "Album name",
+      albumNamePlaceholder: "Example: Colombia Florece 2026",
+      description: "Description",
+      descriptionPlaceholder: "Briefly describe this album",
+      place: "Location",
+      placePlaceholder: "Example: Darwin Waterfront",
+      date: "Date",
+      creating: "Creating...",
+      selectAlbum: "Select album",
+      selectAlbumDescription:
+        "Select the album you want to manage.",
+      loadingAlbums: "Loading albums...",
+      noAlbums: "There are no albums yet",
+      noAlbumsDescription:
+        "Create your first album using the form above.",
+      chooseAlbum: "Select an album",
+      photo: "photo",
+      photos: "photos",
+      placeUnavailable: "Location unavailable",
+      photograph: "photo",
+      photographs: "photos",
+      deleteAlbum: "Delete album",
+      uploadPhotos: "Upload photos",
+      uploadPhotosDescription:
+        "You can select multiple images at the same time.",
+      selectPhotographs: "Select photos",
+      fromPhone: "From your phone camera or gallery",
+      image: "image",
+      images: "images",
+      selected: "selected",
+      selectedPlural: "selected",
+      remove: "Remove",
+      preview: "Preview",
+      uploadingPhotos: "Uploading photos",
+      publishing: "Publishing...",
+      publishPhotos: "Publish photos",
+      publishedPhotos: "Published photos",
+      loadingPhotos: "Loading photos...",
+      emptyAlbum: "This album does not have any photos yet",
+      photoAlt: "Photo",
+      delete: "Delete",
+    },
+  }
+
+  const t = translations[language] || translations.es
   const token = localStorage.getItem("token")
 
   const selectedAlbumData = albums.find(
@@ -53,19 +199,22 @@ function GalleryAdmin() {
   }
 
   const formatDate = (dateValue) => {
-    if (!dateValue) return "Fecha no disponible"
+    if (!dateValue) return t.dateUnavailable
 
     const date = new Date(`${dateValue}T00:00:00`)
 
     if (Number.isNaN(date.getTime())) {
-      return "Fecha no disponible"
+      return t.dateUnavailable
     }
 
-    return new Intl.DateTimeFormat("es-AU", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date)
+    return new Intl.DateTimeFormat(
+      language === "es" ? "es-AU" : "en-AU",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }
+    ).format(date)
   }
 
   const loadAlbums = async () => {
@@ -86,12 +235,10 @@ function GalleryAdmin() {
       )
     } catch (error) {
       console.error("Error loading albums:", error)
-
       setAlbums([])
-
       alert(
         error?.response?.data?.detail ||
-          "Error cargando los álbumes"
+          t.loadAlbumsError
       )
     } finally {
       setLoadingAlbums(false)
@@ -121,12 +268,10 @@ function GalleryAdmin() {
       )
     } catch (error) {
       console.error("Error loading album photos:", error)
-
       setGallery([])
-
       alert(
         error?.response?.data?.detail ||
-          "Error cargando las fotografías"
+          t.loadPhotosError
       )
     } finally {
       setLoadingGallery(false)
@@ -163,17 +308,17 @@ function GalleryAdmin() {
     const location = albumLocation.trim()
 
     if (!title) {
-      alert("Escribe el nombre del álbum.")
+      alert(t.albumNameRequired)
       return
     }
 
     if (!location) {
-      alert("Escribe el lugar del álbum.")
+      alert(t.albumLocationRequired)
       return
     }
 
     if (!albumDate) {
-      alert("Selecciona la fecha del álbum.")
+      alert(t.albumDateRequired)
       return
     }
 
@@ -207,13 +352,12 @@ function GalleryAdmin() {
         setSelectedAlbum(String(newAlbum.id))
       }
 
-      alert("Álbum creado correctamente")
+      alert(t.albumCreated)
     } catch (error) {
       console.error("Error creating album:", error)
-
       alert(
         error?.response?.data?.detail ||
-          "Error creando el álbum"
+          t.albumCreateError
       )
     } finally {
       setCreatingAlbum(false)
@@ -224,7 +368,9 @@ function GalleryAdmin() {
     if (!selectedAlbum) return
 
     const confirmed = window.confirm(
-      `¿Quieres eliminar el álbum "${selectedAlbumData?.title || ""}" y todas sus fotografías?`
+      t.deleteAlbumConfirm(
+        selectedAlbumData?.title || ""
+      )
     )
 
     if (!confirmed) return
@@ -239,16 +385,13 @@ function GalleryAdmin() {
 
       setSelectedAlbum("")
       setGallery([])
-
       await loadAlbums()
-
-      alert("Álbum eliminado correctamente")
+      alert(t.albumDeleted)
     } catch (error) {
       console.error("Error deleting album:", error)
-
       alert(
         error?.response?.data?.detail ||
-          "Error eliminando el álbum"
+          t.albumDeleteError
       )
     }
   }
@@ -281,7 +424,7 @@ function GalleryAdmin() {
     )
 
     if (validFiles.length !== files.length) {
-      alert("Solo puedes seleccionar archivos de imagen.")
+      alert(t.imagesOnly)
     }
 
     if (validFiles.length === 0) return
@@ -301,7 +444,7 @@ function GalleryAdmin() {
 
   const uploadFileToCloudinary = async (file) => {
     if (!selectedAlbum) {
-      throw new Error("No hay un álbum seleccionado.")
+      throw new Error(t.noAlbumSelected)
     }
 
     const uploadData = new FormData()
@@ -326,7 +469,7 @@ function GalleryAdmin() {
     if (!response.ok || !data.secure_url) {
       throw new Error(
         data?.error?.message ||
-          "Cloudinary no devolvió la URL de la imagen."
+          t.cloudinaryNoUrl
       )
     }
 
@@ -335,12 +478,12 @@ function GalleryAdmin() {
 
   const saveImages = async () => {
     if (!selectedAlbum) {
-      alert("Selecciona primero un álbum.")
+      alert(t.selectAlbumFirst)
       return
     }
 
     if (selectedFiles.length === 0) {
-      alert("Selecciona una o varias fotografías.")
+      alert(t.selectPhotos)
       return
     }
 
@@ -358,7 +501,6 @@ function GalleryAdmin() {
         index += 1
       ) {
         const file = selectedFiles[index]
-
         const imageUrl =
           await uploadFileToCloudinary(file)
 
@@ -385,14 +527,13 @@ function GalleryAdmin() {
         loadAlbums(),
       ])
 
-      alert("Fotografías publicadas correctamente")
+      alert(t.photosPublished)
     } catch (error) {
       console.error("Error uploading gallery:", error)
-
       alert(
         error?.response?.data?.detail ||
           error?.message ||
-          "Error subiendo las fotografías"
+          t.uploadPhotosError
       )
     } finally {
       setUploading(false)
@@ -401,7 +542,7 @@ function GalleryAdmin() {
 
   const deleteImage = async (photoId) => {
     const confirmed = window.confirm(
-      "¿Quieres eliminar esta fotografía?"
+      t.deletePhotoConfirm
     )
 
     if (!confirmed) return
@@ -420,28 +561,29 @@ function GalleryAdmin() {
       ])
     } catch (error) {
       console.error("Error deleting image:", error)
-
       alert(
         error?.response?.data?.detail ||
-          "Error eliminando la fotografía"
+          t.deletePhotoError
       )
     }
   }
+
+  const albumPhotoCount =
+    selectedAlbumData?.photo_count || 0
 
   return (
     <div className="space-y-6">
       <section>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-          Contenido
+          {t.content}
         </p>
 
         <h1 className="mt-1 text-3xl font-extrabold text-slate-950">
-          Galería
+          {t.gallery}
         </h1>
 
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Crea álbumes y publica fotografías directamente
-          desde tu teléfono o computador.
+          {t.intro}
         </p>
       </section>
 
@@ -449,12 +591,11 @@ function GalleryAdmin() {
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950">
             <Plus size={20} />
-            Crear álbum
+            {t.createAlbum}
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Crea una nueva colección para organizar las
-            fotografías.
+            {t.createAlbumDescription}
           </p>
         </div>
 
@@ -467,7 +608,7 @@ function GalleryAdmin() {
               htmlFor="album-title"
               className="mb-2 block text-sm font-bold text-slate-700"
             >
-              Nombre del álbum
+              {t.albumName}
             </label>
 
             <input
@@ -477,7 +618,7 @@ function GalleryAdmin() {
               onChange={(event) =>
                 setAlbumTitle(event.target.value)
               }
-              placeholder="Ejemplo: Colombia Florece 2026"
+              placeholder={t.albumNamePlaceholder}
               className="w-full rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
             />
           </div>
@@ -487,7 +628,7 @@ function GalleryAdmin() {
               htmlFor="album-description"
               className="mb-2 block text-sm font-bold text-slate-700"
             >
-              Descripción
+              {t.description}
             </label>
 
             <textarea
@@ -496,7 +637,7 @@ function GalleryAdmin() {
               onChange={(event) =>
                 setAlbumDescription(event.target.value)
               }
-              placeholder="Describe brevemente este álbum"
+              placeholder={t.descriptionPlaceholder}
               rows={3}
               className="w-full resize-none rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
             />
@@ -507,7 +648,7 @@ function GalleryAdmin() {
               htmlFor="album-location"
               className="mb-2 block text-sm font-bold text-slate-700"
             >
-              Lugar
+              {t.place}
             </label>
 
             <div className="relative">
@@ -523,7 +664,7 @@ function GalleryAdmin() {
                 onChange={(event) =>
                   setAlbumLocation(event.target.value)
                 }
-                placeholder="Ejemplo: Darwin Waterfront"
+                placeholder={t.placePlaceholder}
                 className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-11 pr-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
               />
             </div>
@@ -534,7 +675,7 @@ function GalleryAdmin() {
               htmlFor="album-date"
               className="mb-2 block text-sm font-bold text-slate-700"
             >
-              Fecha
+              {t.date}
             </label>
 
             <div className="relative">
@@ -566,10 +707,9 @@ function GalleryAdmin() {
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={19} />
-
             {creatingAlbum
-              ? "Creando..."
-              : "Crear álbum"}
+              ? t.creating
+              : t.createAlbum}
           </button>
         </form>
       </section>
@@ -578,11 +718,11 @@ function GalleryAdmin() {
         <div className="border-b border-slate-200 px-5 py-4">
           <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-950">
             <FolderOpen size={20} />
-            Seleccionar álbum
+            {t.selectAlbum}
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Selecciona el álbum que quieres administrar.
+            {t.selectAlbumDescription}
           </p>
         </div>
 
@@ -590,7 +730,7 @@ function GalleryAdmin() {
           {loadingAlbums ? (
             <div className="rounded-2xl bg-slate-50 p-5 text-center">
               <p className="font-bold text-slate-600">
-                Cargando álbumes...
+                {t.loadingAlbums}
               </p>
             </div>
           ) : albums.length === 0 ? (
@@ -601,12 +741,11 @@ function GalleryAdmin() {
               />
 
               <p className="mt-3 font-bold text-slate-800">
-                Todavía no hay álbumes
+                {t.noAlbums}
               </p>
 
               <p className="mt-1 text-sm text-slate-500">
-                Crea tu primer álbum usando el formulario
-                anterior.
+                {t.noAlbumsDescription}
               </p>
             </div>
           ) : (
@@ -619,7 +758,7 @@ function GalleryAdmin() {
                 className="w-full rounded-2xl border border-slate-200 bg-white p-4 font-medium text-slate-800 outline-none transition focus:border-slate-400"
               >
                 <option value="">
-                  Selecciona un álbum
+                  {t.chooseAlbum}
                 </option>
 
                 {albums.map((album) => (
@@ -628,8 +767,10 @@ function GalleryAdmin() {
                     value={album.id}
                   >
                     {album.title} —{" "}
-                    {album.photo_count || 0} foto
-                    {album.photo_count === 1 ? "" : "s"}
+                    {album.photo_count || 0}{" "}
+                    {album.photo_count === 1
+                      ? t.photo
+                      : t.photos}
                   </option>
                 ))}
               </select>
@@ -675,18 +816,17 @@ function GalleryAdmin() {
                         <MapPin size={16} />
                         <span>
                           {selectedAlbumData.location ||
-                            "Lugar no disponible"}
+                            t.placeUnavailable}
                         </span>
                       </div>
                     </div>
 
                     <div className="mt-4 flex items-center justify-between gap-4">
                       <p className="text-sm font-bold text-slate-600">
-                        {selectedAlbumData.photo_count || 0}{" "}
-                        fotografía
-                        {selectedAlbumData.photo_count === 1
-                          ? ""
-                          : "s"}
+                        {albumPhotoCount}{" "}
+                        {albumPhotoCount === 1
+                          ? t.photograph
+                          : t.photographs}
                       </p>
 
                       <button
@@ -695,7 +835,7 @@ function GalleryAdmin() {
                         className="flex items-center gap-1.5 text-sm font-bold text-red-600"
                       >
                         <Trash2 size={17} />
-                        Eliminar álbum
+                        {t.deleteAlbum}
                       </button>
                     </div>
                   </div>
@@ -710,12 +850,11 @@ function GalleryAdmin() {
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="text-lg font-extrabold text-slate-950">
-              Subir fotografías
+              {t.uploadPhotos}
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Puedes seleccionar varias imágenes al mismo
-              tiempo.
+              {t.uploadPhotosDescription}
             </p>
           </div>
 
@@ -734,11 +873,11 @@ function GalleryAdmin() {
               />
 
               <span className="mt-3 font-extrabold text-slate-800">
-                Seleccionar fotografías
+                {t.selectPhotographs}
               </span>
 
               <span className="mt-1 text-sm text-slate-500">
-                Desde la cámara o galería del teléfono
+                {t.fromPhone}
               </span>
             </button>
 
@@ -755,14 +894,13 @@ function GalleryAdmin() {
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <p className="font-bold text-slate-800">
-                    {selectedFiles.length} imagen
+                    {selectedFiles.length}{" "}
                     {selectedFiles.length === 1
-                      ? ""
-                      : "es"}{" "}
-                    seleccionada
+                      ? t.image
+                      : t.images}{" "}
                     {selectedFiles.length === 1
-                      ? ""
-                      : "s"}
+                      ? t.selected
+                      : t.selectedPlural}
                   </p>
 
                   <button
@@ -772,7 +910,7 @@ function GalleryAdmin() {
                     className="flex items-center gap-1 text-sm font-bold text-red-600 disabled:opacity-60"
                   >
                     <X size={16} />
-                    Quitar
+                    {t.remove}
                   </button>
                 </div>
 
@@ -781,7 +919,7 @@ function GalleryAdmin() {
                     <img
                       key={`${preview}-${index}`}
                       src={preview}
-                      alt={`Vista previa ${index + 1}`}
+                      alt={`${t.preview} ${index + 1}`}
                       className="aspect-square w-full rounded-xl object-cover"
                     />
                   ))}
@@ -792,7 +930,7 @@ function GalleryAdmin() {
             {uploading && (
               <div className="rounded-2xl bg-slate-100 p-4">
                 <div className="flex items-center justify-between text-sm font-bold text-slate-700">
-                  <span>Subiendo fotografías</span>
+                  <span>{t.uploadingPhotos}</span>
 
                   <span>
                     {uploadProgress.current}/
@@ -828,10 +966,9 @@ function GalleryAdmin() {
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Upload size={19} />
-
               {uploading
-                ? "Publicando..."
-                : "Publicar fotografías"}
+                ? t.publishing
+                : t.publishPhotos}
             </button>
           </div>
         </section>
@@ -842,12 +979,14 @@ function GalleryAdmin() {
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl font-extrabold text-slate-950">
-                Fotografías publicadas
+                {t.publishedPhotos}
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                {gallery.length} fotografía
-                {gallery.length === 1 ? "" : "s"}
+                {gallery.length}{" "}
+                {gallery.length === 1
+                  ? t.photograph
+                  : t.photographs}
               </p>
             </div>
 
@@ -860,7 +999,7 @@ function GalleryAdmin() {
           {loadingGallery ? (
             <div className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
               <p className="font-bold text-slate-600">
-                Cargando fotografías...
+                {t.loadingPhotos}
               </p>
             </div>
           ) : gallery.length === 0 ? (
@@ -871,7 +1010,7 @@ function GalleryAdmin() {
               />
 
               <p className="mt-3 font-bold text-slate-800">
-                Este álbum todavía no tiene fotografías
+                {t.emptyAlbum}
               </p>
             </div>
           ) : (
@@ -884,7 +1023,7 @@ function GalleryAdmin() {
                   <div className="relative">
                     <img
                       src={photo.image_url}
-                      alt={`Fotografía ${index + 1}`}
+                      alt={`${t.photoAlt} ${index + 1}`}
                       loading="lazy"
                       className="h-44 w-full object-cover"
                     />
@@ -902,7 +1041,7 @@ function GalleryAdmin() {
                     className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50"
                   >
                     <Trash2 size={17} />
-                    Eliminar
+                    {t.delete}
                   </button>
                 </article>
               ))}

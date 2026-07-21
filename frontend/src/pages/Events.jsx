@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react"
-import axios from "axios"
-import { texts } from "../translations"
-import { API_URL } from "../config"
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { texts } from "../translations";
+import { API_URL } from "../config";
 
 const FESTIVAL_IMAGE =
-  "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782313087/colombia-florece_yh0vna.png"
+  "https://res.cloudinary.com/dtlmi9fgx/image/upload/v1782313087/colombia-florece_yh0vna.png";
 
 function Events({
   events = [],
@@ -12,57 +12,62 @@ function Events({
   userProfile,
   language = "es",
 }) {
-  const t = texts[language]
+  const t = texts[language] || texts.es;
 
-  const [attendeeCounts, setAttendeeCounts] = useState({})
-  const [joinedEvents, setJoinedEvents] = useState({})
-  const [now, setNow] = useState(new Date())
+  const [attendeeCounts, setAttendeeCounts] = useState({});
+  const [joinedEvents, setJoinedEvents] = useState({});
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setNow(new Date())
-    }, 1000)
+      setNow(new Date());
+    }, 1000);
 
     return () => {
-      window.clearInterval(timer)
-    }
-  }, [])
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const loadAttendees = async () => {
       try {
-        const counts = {}
+        const results = await Promise.all(
+          events.map(async (event) => {
+            const response = await axios.get(
+              `${API_URL}/events/${event.id}/attendees`
+            );
 
-        for (const event of events) {
-          const response = await axios.get(
-            `${API_URL}/events/${event.id}/attendees`
-          )
+            return [
+              event.id,
+              Number(response.data?.count) || 0,
+            ];
+          })
+        );
 
-          counts[event.id] = response.data.count || 0
-        }
-
-        setAttendeeCounts(counts)
+        setAttendeeCounts(Object.fromEntries(results));
       } catch (error) {
-        console.error("Error loading attendees:", error)
+        console.error("Error loading attendees:", error);
       }
-    }
+    };
 
     if (events.length > 0) {
-      loadAttendees()
+      loadAttendees();
+    } else {
+      setAttendeeCounts({});
     }
-  }, [events])
+  }, [events]);
 
   const handleAttendEvent = async (eventId) => {
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       if (!token) {
         alert(
           language === "es"
-            ? "Debes iniciar sesión primero"
-            : "You must login first"
-        )
-        return
+            ? "Debes iniciar sesión primero."
+            : "You must sign in first."
+        );
+        return;
       }
 
       const response = await axios.post(
@@ -73,89 +78,92 @@ function Events({
             Authorization: `Bearer ${token}`,
           },
         }
-      )
+      );
 
       const alreadyJoined =
-        response.data?.message === "Already joined"
+        response.data?.message === "Already joined";
 
       setJoinedEvents((previous) => ({
         ...previous,
         [eventId]: true,
-      }))
+      }));
 
       if (!alreadyJoined) {
         setAttendeeCounts((previous) => ({
           ...previous,
           [eventId]: (previous[eventId] || 0) + 1,
-        }))
+        }));
       }
     } catch (error) {
-      console.error("Error joining event:", error)
+      console.error("Error joining event:", error);
 
       alert(
-        language === "es"
-          ? "Error al confirmar asistencia"
-          : "Error joining the event"
-      )
+        typeof error.response?.data?.detail === "string"
+          ? error.response.data.detail
+          : language === "es"
+            ? "No se pudo confirmar tu asistencia."
+            : "Your attendance could not be confirmed."
+      );
     }
-  }
+  };
 
   const handleOpenMaps = (location) => {
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       location || "Darwin"
-    )}`
+    )}`;
 
-    window.open(mapsUrl, "_blank", "noopener,noreferrer")
-  }
+    window.open(mapsUrl, "_blank", "noopener,noreferrer");
+  };
 
   const formatEventDate = (dateValue) => {
-    if (!dateValue) return null
+    if (!dateValue) return null;
 
-    const date = new Date(dateValue)
+    const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
-      return null
+      return null;
     }
 
     return new Intl.DateTimeFormat(
-      language === "es" ? "es-AU" : "en-AU",
+      language === "es" ? "es" : "en-AU",
       {
         weekday: "long",
         day: "numeric",
         month: "long",
         year: "numeric",
       }
-    ).format(date)
-  }
+    ).format(date);
+  };
 
   const formatEventTime = (dateValue) => {
-    if (!dateValue) return null
+    if (!dateValue) return null;
 
-    const date = new Date(dateValue)
+    const date = new Date(dateValue);
 
     if (Number.isNaN(date.getTime())) {
-      return null
+      return null;
     }
 
     return new Intl.DateTimeFormat(
-      language === "es" ? "es-AU" : "en-AU",
+      language === "es" ? "es" : "en-AU",
       {
         hour: "numeric",
         minute: "2-digit",
       }
-    ).format(date)
-  }
+    ).format(date);
+  };
 
   const getCountdown = (dateValue) => {
-    if (!dateValue) return null
+    if (!dateValue) return null;
 
-    const targetDate = new Date(dateValue)
+    const targetDate = new Date(dateValue);
 
     if (Number.isNaN(targetDate.getTime())) {
-      return null
+      return null;
     }
 
-    const difference = targetDate.getTime() - now.getTime()
+    const difference =
+      targetDate.getTime() - now.getTime();
 
     if (difference <= 0) {
       return {
@@ -164,15 +172,19 @@ function Events({
           language === "es"
             ? "El evento ya comenzó"
             : "The event has started",
-      }
+      };
     }
 
-    const totalSeconds = Math.floor(difference / 1000)
+    const totalSeconds = Math.floor(difference / 1000);
 
-    const days = Math.floor(totalSeconds / 86400)
-    const hours = Math.floor((totalSeconds % 86400) / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = totalSeconds % 60
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor(
+      (totalSeconds % 86400) / 3600
+    );
+    const minutes = Math.floor(
+      (totalSeconds % 3600) / 60
+    );
+    const seconds = totalSeconds % 60;
 
     return {
       started: false,
@@ -180,12 +192,11 @@ function Events({
       hours,
       minutes,
       seconds,
-    }
-  }
+    };
+  };
 
-  const formatCountdownNumber = (value) => {
-    return String(value).padStart(2, "0")
-  }
+  const formatCountdownNumber = (value) =>
+    String(value).padStart(2, "0");
 
   return (
     <>
@@ -205,14 +216,21 @@ function Events({
         <div className="grid gap-5">
           {events.map((event) => {
             const eventBusinesses = businesses.filter(
-              (business) => business.event_id === event.id
-            )
+              (business) =>
+                business.event_id === event.id
+            );
 
-            const isJoined = joinedEvents[event.id]
-            const count = attendeeCounts[event.id] || 0
-            const formattedDate = formatEventDate(event.event_date)
-            const formattedTime = formatEventTime(event.event_date)
-            const countdown = getCountdown(event.event_date)
+            const isJoined = joinedEvents[event.id];
+            const count = attendeeCounts[event.id] || 0;
+            const formattedDate = formatEventDate(
+              event.event_date
+            );
+            const formattedTime = formatEventTime(
+              event.event_date
+            );
+            const countdown = getCountdown(
+              event.event_date
+            );
 
             return (
               <article
@@ -221,7 +239,12 @@ function Events({
               >
                 <img
                   src={event.image_url || FESTIVAL_IMAGE}
-                  alt={event.title}
+                  alt={
+                    event.title ||
+                    (language === "es"
+                      ? "Imagen del evento"
+                      : "Event image")
+                  }
                   className="h-52 w-full object-cover"
                 />
 
@@ -243,11 +266,17 @@ function Events({
                   )}
 
                   <div className="mt-4 grid gap-2 text-sm text-slate-700">
-                    {formattedDate && <p>📅 {formattedDate}</p>}
+                    {formattedDate && (
+                      <p>📅 {formattedDate}</p>
+                    )}
 
-                    {formattedTime && <p>🕓 {formattedTime}</p>}
+                    {formattedTime && (
+                      <p>🕓 {formattedTime}</p>
+                    )}
 
-                    <p>📍 {event.location || "Darwin"}</p>
+                    <p>
+                      📍 {event.location || "Darwin"}
+                    </p>
 
                     <p>
                       👥{" "}
@@ -273,26 +302,39 @@ function Events({
                         <div className="mt-3 grid grid-cols-4 gap-2 text-center">
                           <div className="rounded-xl bg-white/10 px-2 py-3">
                             <p className="text-xl font-extrabold">
-                              {formatCountdownNumber(countdown.days)}
+                              {formatCountdownNumber(
+                                countdown.days
+                              )}
                             </p>
+
                             <p className="mt-1 text-[10px] uppercase text-slate-400">
-                              {language === "es" ? "Días" : "Days"}
+                              {language === "es"
+                                ? "Días"
+                                : "Days"}
                             </p>
                           </div>
 
                           <div className="rounded-xl bg-white/10 px-2 py-3">
                             <p className="text-xl font-extrabold">
-                              {formatCountdownNumber(countdown.hours)}
+                              {formatCountdownNumber(
+                                countdown.hours
+                              )}
                             </p>
+
                             <p className="mt-1 text-[10px] uppercase text-slate-400">
-                              {language === "es" ? "Horas" : "Hours"}
+                              {language === "es"
+                                ? "Horas"
+                                : "Hours"}
                             </p>
                           </div>
 
                           <div className="rounded-xl bg-white/10 px-2 py-3">
                             <p className="text-xl font-extrabold">
-                              {formatCountdownNumber(countdown.minutes)}
+                              {formatCountdownNumber(
+                                countdown.minutes
+                              )}
                             </p>
+
                             <p className="mt-1 text-[10px] uppercase text-slate-400">
                               {language === "es"
                                 ? "Minutos"
@@ -302,8 +344,11 @@ function Events({
 
                           <div className="rounded-xl bg-white/10 px-2 py-3">
                             <p className="text-xl font-extrabold">
-                              {formatCountdownNumber(countdown.seconds)}
+                              {formatCountdownNumber(
+                                countdown.seconds
+                              )}
                             </p>
+
                             <p className="mt-1 text-[10px] uppercase text-slate-400">
                               {language === "es"
                                 ? "Segundos"
@@ -316,12 +361,16 @@ function Events({
                   )}
 
                   <div className="mt-6">
-                    <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
+                    <div className="mb-4 flex items-center justify-between gap-3 text-sm text-slate-600">
                       <span>
                         👥 {count}{" "}
                         {language === "es"
-                          ? "asistentes"
-                          : "attending"}
+                          ? count === 1
+                            ? "asistente"
+                            : "asistentes"
+                          : count === 1
+                            ? "attendee"
+                            : "attendees"}
                       </span>
 
                       <button
@@ -340,58 +389,72 @@ function Events({
 
                     <button
                       type="button"
-                      onClick={() => handleAttendEvent(event.id)}
+                      onClick={() =>
+                        handleAttendEvent(event.id)
+                      }
                       disabled={isJoined}
                       className={`w-full rounded-2xl py-4 text-lg font-bold shadow-lg transition-all duration-300 ${
                         isJoined
-                          ? "bg-green-600 text-white"
+                          ? "cursor-not-allowed bg-green-600 text-white"
                           : "bg-blue-700 text-white hover:bg-blue-800"
                       }`}
                     >
                       {isJoined
                         ? language === "es"
                           ? "✔ Asistencia confirmada"
-                          : "✔ You're Attending"
+                          : "✔ Attendance confirmed"
                         : language === "es"
                           ? "✅ Asistir al evento"
-                          : "✅ Attend Event"}
+                          : "✅ Attend event"}
                     </button>
                   </div>
 
                   {eventBusinesses.length > 0 && (
                     <div className="mt-4 rounded-xl bg-yellow-50 p-3">
                       <h4 className="mb-2 font-bold text-yellow-800">
-                        {t.businessesPresent}
+                        {t.businessesPresent ||
+                          (language === "es"
+                            ? "Negocios presentes"
+                            : "Businesses attending")}
                       </h4>
 
                       <div className="grid gap-2">
-                        {eventBusinesses.map((business) => (
-                          <div
-                            key={business.id}
-                            className="flex items-center gap-2"
-                          >
-                            <img
-                              src={
-                                business.image_url ||
-                                "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"
-                              }
-                              alt={business.business_name}
-                              className="h-12 w-12 rounded-lg object-cover"
-                            />
+                        {eventBusinesses.map(
+                          (business) => (
+                            <div
+                              key={business.id}
+                              className="flex items-center gap-2"
+                            >
+                              <img
+                                src={
+                                  business.image_url ||
+                                  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"
+                                }
+                                alt={
+                                  business.business_name
+                                }
+                                className="h-12 w-12 rounded-lg object-cover"
+                              />
 
-                            <div>
-                              <p className="text-sm font-bold">
-                                {business.business_name}
-                              </p>
+                              <div>
+                                <p className="text-sm font-bold">
+                                  {
+                                    business.business_name
+                                  }
+                                </p>
 
-                              <p className="text-xs text-gray-600">
-                                {business.category} ·{" "}
-                                {business.stand_location ||
-                                  t.standPending}
-                              </p>
+                                <p className="text-xs text-gray-600">
+                                  {business.category} ·{" "}
+                                  {business.stand_location ||
+                                    t.standPending ||
+                                    (language === "es"
+                                      ? "Ubicación pendiente"
+                                      : "Location pending")}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </div>
                   )}
@@ -401,7 +464,7 @@ function Events({
                       <p className="text-sm font-bold text-blue-950">
                         {language === "es"
                           ? "Herramientas de administrador"
-                          : "Admin Tools"}
+                          : "Admin tools"}
                       </p>
 
                       <p className="mt-1 text-xs text-slate-600">
@@ -413,12 +476,12 @@ function Events({
                   )}
                 </div>
               </article>
-            )
+            );
           })}
         </div>
       )}
     </>
-  )
+  );
 }
 
-export default Events
+export default Events;

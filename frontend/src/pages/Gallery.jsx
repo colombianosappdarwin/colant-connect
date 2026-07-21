@@ -1,3 +1,6 @@
+Gallery_bilingual_complete.jsx
+
+
 import { useEffect, useState } from "react"
 import axios from "axios"
 import {
@@ -13,7 +16,7 @@ import { API_URL } from "../config"
 import { texts } from "../translations"
 
 function Gallery({ language = "es" }) {
-  const t = texts[language]
+  const t = texts[language] || texts.es
 
   const [albums, setAlbums] = useState([])
   const [openedAlbum, setOpenedAlbum] = useState(null)
@@ -165,7 +168,14 @@ function Gallery({ language = "es" }) {
               </div>
 
               <p className="mt-4 text-sm font-bold text-blue-700">
-                {albumPhotos.length} {language === "es" ? "fotografías" : "photos"}
+                {albumPhotos.length}{" "}
+                {language === "es"
+                  ? albumPhotos.length === 1
+                    ? "fotografía"
+                    : "fotografías"
+                  : albumPhotos.length === 1
+                    ? "photo"
+                    : "photos"}
               </p>
             </div>
           </section>
@@ -328,8 +338,16 @@ function Gallery({ language = "es" }) {
 
                         <p className="mt-4 text-sm font-bold text-blue-700">
                           {language === "es"
-                            ? `Ver ${album.photo_count || 0} fotos`
-                            : `View ${album.photo_count || 0} photos`}
+                            ? `Ver ${album.photo_count || 0} ${
+                                (album.photo_count || 0) === 1
+                                  ? "foto"
+                                  : "fotos"
+                              }`
+                            : `View ${album.photo_count || 0} ${
+                                (album.photo_count || 0) === 1
+                                  ? "photo"
+                                  : "photos"
+                              }`}
                         </p>
                       </div>
 

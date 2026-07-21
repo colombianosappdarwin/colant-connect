@@ -20,12 +20,21 @@ import BottomNavigation from "./components/BottomNavigation";
 import { texts } from "./translations";
 
 function App() {
+  const getInitialLanguage = () => {
+    const savedLanguage = localStorage.getItem("language");
+
+    if (savedLanguage === "es" || savedLanguage === "en") {
+      return savedLanguage;
+    }
+
+    return "es";
+  };
+
   const [events, setEvents] = useState([]);
   const [businesses, setBusinesses] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
 
-  // Mientras se verifica el token, mostramos la pantalla de carga.
   const [checkingSession, setCheckingSession] = useState(true);
 
   const [authMode, setAuthMode] = useState("login");
@@ -34,24 +43,32 @@ function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [selectedEventDetail, setSelectedEventDetail] = useState(null);
 
-  const [language, setLanguage] = useState(
-    localStorage.getItem("language") || "es"
-  );
+  const [language, setLanguage] = useState(getInitialLanguage);
 
   const [galleryByEvent, setGalleryByEvent] = useState({});
   const [attendeesByEvent, setAttendeesByEvent] = useState({});
 
-  const t = texts[language];
+  const t = texts[language] || texts.es;
+
+  const changeLanguage = (newLanguage) => {
+    if (newLanguage !== "es" && newLanguage !== "en") {
+      return;
+    }
+
+    localStorage.setItem("language", newLanguage);
+    setLanguage(newLanguage);
+  };
 
   const toggleLanguage = () => {
-    setLanguage((previousLanguage) => {
-      const newLanguage =
-        previousLanguage === "es" ? "en" : "es";
+    changeLanguage(language === "es" ? "en" : "es");
+  };
 
-      localStorage.setItem("language", newLanguage);
+  const applyProfileLanguage = (profile) => {
+    const preferredLanguage = profile?.preferred_language;
 
-      return newLanguage;
-    });
+    if (preferredLanguage === "es" || preferredLanguage === "en") {
+      changeLanguage(preferredLanguage);
+    }
   };
 
   const whatsappNumber = "+61405376310";
@@ -68,12 +85,7 @@ function App() {
   const loadEvents = async () => {
     try {
       const response = await axios.get(`${API_URL}/events/`);
-
-      setEvents(
-        Array.isArray(response.data)
-          ? response.data
-          : []
-      );
+      setEvents(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error loading events:", error);
     }
@@ -81,15 +93,8 @@ function App() {
 
   const loadBusinesses = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}/businesses/`
-      );
-
-      setBusinesses(
-        Array.isArray(response.data)
-          ? response.data
-          : []
-      );
+      const response = await axios.get(`${API_URL}/businesses/`);
+      setBusinesses(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error loading businesses:", error);
     }
@@ -104,19 +109,18 @@ function App() {
     }
 
     try {
-      const response = await axios.get(
-        `${API_URL}/auth/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      setUserProfile(response.data);
+      const profile = response.data;
+
+      setUserProfile(profile);
+      applyProfileLanguage(profile);
       setActiveTab("home");
 
-      // Registra nuevamente el dispositivo para notificaciones.
       try {
         await initializePushNotifications();
       } catch (pushError) {
@@ -156,7 +160,6 @@ function App() {
     setSelectedEventDetail(null);
   };
 
-  // Pantalla inicial mientras verificamos la sesión guardada.
   if (checkingSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-blue-950 px-6">
@@ -165,12 +168,12 @@ function App() {
             🇨🇴
           </div>
 
-          <h1 className="text-4xl font-extrabold text-white">
-            COLANT
-          </h1>
+          <h1 className="text-4xl font-extrabold text-white">COLANT</h1>
 
           <p className="mt-2 text-lg font-semibold text-blue-100">
-            Colombianos en Australia
+            {language === "es"
+              ? "Colombianos en Australia"
+              : "Colombians in Australia"}
           </p>
 
           <div className="mx-auto mt-8 h-10 w-10 animate-spin rounded-full border-4 border-white/30 border-t-yellow-400" />
@@ -186,9 +189,16 @@ function App() {
   }
 
   if (!userProfile) {
+    const languageProps = {
+      language,
+      changeLanguage,
+      toggleLanguage,
+    };
+
     if (window.location.pathname === "/reset-password") {
       return (
         <ResetPassword
+          {...languageProps}
           onLoginClick={() => setAuthMode("login")}
         />
       );
@@ -197,6 +207,7 @@ function App() {
     if (authMode === "verifyEmail") {
       return (
         <VerifyEmail
+          {...languageProps}
           initialEmail={verificationEmail}
           onLoginClick={() => setAuthMode("login")}
         />
@@ -206,6 +217,7 @@ function App() {
     if (authMode === "register") {
       return (
         <Register
+          {...languageProps}
           onLoginClick={() => setAuthMode("login")}
           onRegisterSuccess={(email) => {
             setVerificationEmail(email);
@@ -217,9 +229,11 @@ function App() {
 
     return (
       <Login
+        {...languageProps}
         onRegisterClick={() => setAuthMode("register")}
         onLoginSuccess={(profile) => {
           setUserProfile(profile);
+          applyProfileLanguage(profile);
           setActiveTab("home");
         }}
       />
@@ -247,26 +261,21 @@ function App() {
                 onClick={toggleLanguage}
                 className="rounded-xl bg-blue-700 px-3 py-1 text-xs font-bold text-white"
               >
-                {language === "es"
-                  ? "🇺🇸 English"
-                  : "🇨🇴 Español"}
+                {language === "es" ? "🇺🇸 English" : "🇨🇴 Español"}
               </button>
 
-              <div className="text-3xl">
-                🇨🇴🇦🇺
-              </div>
+              <div className="text-3xl">🇨🇴🇦🇺</div>
             </div>
           </div>
 
-          {activeTab === "eventDetail" &&
-            selectedEventDetail && (
-              <EventDetail
-                event={selectedEventDetail}
-                onBack={() => setActiveTab("home")}
-                onViewMap={() => setActiveTab("map")}
-                language={language}
-              />
-            )}
+          {activeTab === "eventDetail" && selectedEventDetail && (
+            <EventDetail
+              event={selectedEventDetail}
+              onBack={() => setActiveTab("home")}
+              onViewMap={() => setActiveTab("map")}
+              language={language}
+            />
+          )}
 
           {activeTab === "map" && (
             <EventMap
@@ -299,9 +308,7 @@ function App() {
             />
           )}
 
-          {activeTab === "gallery" && (
-            <Gallery language={language} />
-          )}
+          {activeTab === "gallery" && <Gallery language={language} />}
 
           {activeTab === "notifications" && (
             <Notifications
@@ -316,6 +323,7 @@ function App() {
               gallery={gallery}
               userProfile={userProfile}
               onEventsUpdated={loadEvents}
+              language={language}
             />
           )}
 
@@ -325,6 +333,7 @@ function App() {
               setUserProfile={setUserProfile}
               logout={logout}
               language={language}
+              changeLanguage={changeLanguage}
               setActiveTab={setActiveTab}
             />
           )}
@@ -336,10 +345,7 @@ function App() {
           rel="noopener noreferrer"
           className="fixed bottom-28 right-5 z-50 flex items-center gap-2 rounded-full bg-green-500 px-5 py-4 font-bold text-white shadow-2xl transition hover:bg-green-600"
         >
-          💬{" "}
-          {language === "es"
-            ? "Contáctanos"
-            : "Contact Us"}
+          💬 {language === "es" ? "Contáctanos" : "Contact Us"}
         </a>
 
         <BottomNavigation

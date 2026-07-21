@@ -7,58 +7,151 @@ import {
   ShieldCheck,
   Users,
   BarChart3,
-} from "lucide-react"
+} from "lucide-react";
 
 function Dashboard({
   events = [],
   gallery = [],
   userProfile,
   setAdminSection,
+  language = "es",
 }) {
+  const translations = {
+    es: {
+      adminPanel: "Panel administrativo",
+      welcomeBack: "Bienvenido nuevamente",
+      administrator: "Administrador",
+      intro:
+        "Administra los usuarios, eventos, fotografías, avisos y datos de COLANT Connect desde un solo lugar.",
+      administration: "Administración",
+      selectSection:
+        "Selecciona una sección para gestionar la aplicación.",
+
+      users: "Usuarios",
+      usersDescription: "Administrar usuarios y roles",
+      manage: "Gestionar",
+
+      events: "Eventos",
+      eventsDescription: "Crear y administrar eventos",
+
+      gallery: "Galería",
+      galleryDescription: "Subir y organizar fotografías",
+
+      notifications: "Avisos",
+      notificationsDescription:
+        "Enviar avisos a la comunidad",
+      send: "Enviar",
+
+      statistics: "Estadísticas",
+      statisticsDescription:
+        "Consultar información general",
+      view: "Ver",
+
+      settings: "Configuración",
+      settingsDescription:
+        "Administrar ajustes del sistema",
+      open: "Abrir",
+
+      systemSummary: "Resumen del sistema",
+      photos: "Fotografías",
+
+      centralisedAdministration:
+        "Administración centralizada",
+      footerDescription:
+        "Utiliza este panel para gestionar el contenido disponible en la aplicación sin modificar el código.",
+    },
+
+    en: {
+      adminPanel: "Administration panel",
+      welcomeBack: "Welcome back",
+      administrator: "Administrator",
+      intro:
+        "Manage COLANT Connect users, events, photos, notices and data from one place.",
+      administration: "Administration",
+      selectSection:
+        "Select a section to manage the application.",
+
+      users: "Users",
+      usersDescription: "Manage users and roles",
+      manage: "Manage",
+
+      events: "Events",
+      eventsDescription: "Create and manage events",
+
+      gallery: "Gallery",
+      galleryDescription: "Upload and organise photos",
+
+      notifications: "Notices",
+      notificationsDescription:
+        "Send notices to the community",
+      send: "Send",
+
+      statistics: "Statistics",
+      statisticsDescription:
+        "View general application information",
+      view: "View",
+
+      settings: "Settings",
+      settingsDescription:
+        "Manage system settings",
+      open: "Open",
+
+      systemSummary: "System summary",
+      photos: "Photos",
+
+      centralisedAdministration:
+        "Centralised administration",
+      footerDescription:
+        "Use this panel to manage the content available in the application without modifying the code.",
+    },
+  };
+
+  const t = translations[language] || translations.es;
+
   const cards = [
     {
       key: "users",
-      title: "Usuarios",
-      description: "Administrar usuarios y roles",
-      value: "Gestionar",
+      title: t.users,
+      description: t.usersDescription,
+      value: t.manage,
       icon: Users,
     },
     {
       key: "events",
-      title: "Eventos",
-      description: "Crear y administrar eventos",
+      title: t.events,
+      description: t.eventsDescription,
       value: events.length,
       icon: CalendarDays,
     },
     {
       key: "gallery",
-      title: "Galería",
-      description: "Subir y organizar fotografías",
+      title: t.gallery,
+      description: t.galleryDescription,
       value: gallery.length,
       icon: Images,
     },
     {
       key: "notifications",
-      title: "Avisos",
-      description: "Enviar avisos a la comunidad",
-      value: "Enviar",
+      title: t.notifications,
+      description: t.notificationsDescription,
+      value: t.send,
       icon: Bell,
     },
     {
       key: "statistics",
-      title: "Estadísticas",
-      description: "Consultar información general",
-      value: "Ver",
+      title: t.statistics,
+      description: t.statisticsDescription,
+      value: t.view,
       icon: BarChart3,
     },
     {
       key: "settings",
-      title: "Configuración",
-      description: "Administrar ajustes del sistema",
-      value: "Abrir",
+      title: t.settings,
+      description: t.settingsDescription,
+      value: t.open,
       icon: Settings,
     },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -67,20 +160,19 @@ function Dashboard({
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-200">
               <ShieldCheck size={15} />
-              Panel administrativo
+              {t.adminPanel}
             </div>
 
             <p className="text-sm font-medium text-slate-400">
-              Bienvenido nuevamente
+              {t.welcomeBack}
             </p>
 
             <h1 className="mt-1 text-3xl font-extrabold tracking-tight">
-              {userProfile?.full_name || "Administrador"}
+              {userProfile?.full_name || t.administrator}
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">
-              Administra los usuarios, eventos, fotografías, avisos y datos de
-              COLANT Connect desde un solo lugar.
+              {t.intro}
             </p>
           </div>
 
@@ -93,17 +185,17 @@ function Dashboard({
       <section>
         <div className="mb-4">
           <h2 className="text-xl font-extrabold text-slate-950">
-            Administración
+            {t.administration}
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Selecciona una sección para gestionar la aplicación.
+            {t.selectSection}
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {cards.map((card) => {
-            const Icon = card.icon
+            const Icon = card.icon;
 
             return (
               <button
@@ -139,20 +231,20 @@ function Dashboard({
                   className="shrink-0 text-slate-400 transition group-hover:translate-x-1 group-hover:text-slate-800"
                 />
               </button>
-            )
+            );
           })}
         </div>
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-extrabold text-slate-950">
-          Resumen del sistema
+          {t.systemSummary}
         </h2>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Eventos
+              {t.events}
             </p>
 
             <p className="mt-2 text-2xl font-extrabold text-slate-950">
@@ -162,7 +254,7 @@ function Dashboard({
 
           <div className="rounded-2xl bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Fotografías
+              {t.photos}
             </p>
 
             <p className="mt-2 text-2xl font-extrabold text-slate-950">
@@ -178,16 +270,15 @@ function Dashboard({
         </p>
 
         <h2 className="mt-2 text-xl font-extrabold">
-          Administración centralizada
+          {t.centralisedAdministration}
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-slate-300">
-          Utiliza este panel para gestionar el contenido disponible en la
-          aplicación sin modificar el código.
+          {t.footerDescription}
         </p>
       </section>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

@@ -1,10 +1,99 @@
-import { useEffect, useRef, useState } from "react"
-import Select from "react-select"
-import { Country, City } from "country-state-city"
-import { updateProfile } from "../services/profileService"
+import { useEffect, useMemo, useRef, useState } from "react";
+import Select from "react-select";
+import { Country, City } from "country-state-city";
+import { updateProfile } from "../services/profileService";
 
-function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
-  const fileInputRef = useRef(null)
+function ProfileForm({
+  userProfile,
+  onBack,
+  onProfileUpdated,
+  language = "es",
+  changeLanguage,
+}) {
+  const fileInputRef = useRef(null);
+
+  const translations = {
+    es: {
+      editProfile: "Editar perfil",
+      saveTop: "GUARDAR",
+      saveChanges: "Guardar cambios",
+      saving: "Guardando...",
+      uploadingPhoto: "Subiendo foto...",
+      fullName: "Nombre completo",
+      gender: "Sexo",
+      male: "M",
+      female: "F",
+      email: "Correo electrónico",
+      birthDate: "Fecha de nacimiento",
+      country: "País de origen",
+      city: "Ciudad de origen",
+      phone: "Número de celular",
+      arrivalDate: "Fecha de llegada a Australia",
+      industry: "Industria en la que trabajas",
+      visaType: "Tipo de visa",
+      preferredLanguage: "Idioma preferido",
+      spanish: "Español",
+      english: "English",
+      selectCountry: "Selecciona un país",
+      selectCity: "Selecciona una ciudad",
+      selectCountryFirst: "Primero selecciona un país",
+      noCountries: "No se encontraron países",
+      noCities: "No se encontraron ciudades",
+      profilePhotoAlt: "Foto de perfil",
+      invalidImage: "Selecciona una imagen válida.",
+      cloudinaryUploadError:
+        "No fue posible subir la foto a Cloudinary.",
+      missingImageUrl:
+        "Cloudinary no devolvió la URL de la imagen.",
+      uploadError: "Error al subir la foto.",
+      selectCountryAlert: "Selecciona un país.",
+      selectCityAlert: "Selecciona una ciudad.",
+      profileUpdated: "Perfil actualizado correctamente.",
+      profileUpdateError:
+        "Error al guardar los cambios del perfil.",
+    },
+    en: {
+      editProfile: "Edit profile",
+      saveTop: "SAVE",
+      saveChanges: "Save changes",
+      saving: "Saving...",
+      uploadingPhoto: "Uploading photo...",
+      fullName: "Full name",
+      gender: "Gender",
+      male: "M",
+      female: "F",
+      email: "Email address",
+      birthDate: "Date of birth",
+      country: "Country of origin",
+      city: "City of origin",
+      phone: "Phone number",
+      arrivalDate: "Arrival date in Australia",
+      industry: "Industry you work in",
+      visaType: "Visa type",
+      preferredLanguage: "Preferred language",
+      spanish: "Español",
+      english: "English",
+      selectCountry: "Select a country",
+      selectCity: "Select a city",
+      selectCountryFirst: "Select a country first",
+      noCountries: "No countries found",
+      noCities: "No cities found",
+      profilePhotoAlt: "Profile photo",
+      invalidImage: "Select a valid image.",
+      cloudinaryUploadError:
+        "The photo could not be uploaded to Cloudinary.",
+      missingImageUrl:
+        "Cloudinary did not return an image URL.",
+      uploadError: "Error uploading the photo.",
+      selectCountryAlert: "Select a country.",
+      selectCityAlert: "Select a city.",
+      profileUpdated: "Profile updated successfully.",
+      profileUpdateError:
+        "Error saving the profile changes.",
+    },
+  };
+
+  const t = translations[language] || translations.es;
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -17,32 +106,43 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
     arrival_date: "",
     industry: "",
     visa_type: "",
+    preferred_language: language,
     profile_photo_url: "",
-  })
+  });
 
-  const [saving, setSaving] = useState(false)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  const countries = Country.getAllCountries().map((country) => ({
-    value: country.isoCode,
-    label: country.name,
-  }))
+  const countries = useMemo(
+    () =>
+      Country.getAllCountries().map((country) => ({
+        value: country.isoCode,
+        label: country.name,
+      })),
+    []
+  );
 
-  const cities = formData.country_origin
-    ? City.getCitiesOfCountry(formData.country_origin).map((city) => ({
+  const cities = useMemo(() => {
+    if (!formData.country_origin) {
+      return [];
+    }
+
+    return City.getCitiesOfCountry(formData.country_origin).map(
+      (city) => ({
         value: city.name,
         label: city.name,
-      }))
-    : []
+      })
+    );
+  }, [formData.country_origin]);
 
   useEffect(() => {
-    if (!userProfile) return
+    if (!userProfile) return;
 
     const savedCountry = Country.getAllCountries().find(
       (country) =>
         country.isoCode === userProfile.country_origin ||
         country.name === userProfile.country_origin
-    )
+    );
 
     setFormData({
       full_name: userProfile.full_name || "",
@@ -55,65 +155,84 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
       arrival_date: userProfile.arrival_date || "",
       industry: userProfile.industry || "",
       visa_type: userProfile.visa_type || "",
-      profile_photo_url: userProfile.profile_photo_url || "",
-    })
-  }, [userProfile])
+      preferred_language:
+        userProfile.preferred_language || language,
+      profile_photo_url:
+        userProfile.profile_photo_url || "",
+    });
+  }, [userProfile, language]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleGenderChange = (genderValue) => {
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       gender: genderValue,
-    }))
-  }
+    }));
+  };
 
   const handleCountryChange = (selectedCountry) => {
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       country_origin: selectedCountry?.value || "",
       city_origin: "",
-    }))
-  }
+    }));
+  };
 
   const handleCityChange = (selectedCity) => {
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       city_origin: selectedCity?.value || "",
-    }))
-  }
+    }));
+  };
+
+  const handleLanguageChange = (selectedLanguage) => {
+    setFormData((previous) => ({
+      ...previous,
+      preferred_language: selectedLanguage,
+    }));
+
+    localStorage.setItem("language", selectedLanguage);
+
+    if (changeLanguage) {
+      changeLanguage(selectedLanguage);
+    }
+  };
 
   const handlePhotoClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files?.[0]
+  const handlePhotoChange = async (event) => {
+    const file = event.target.files?.[0];
 
-    if (!file) return
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Selecciona una imagen válida.")
-      return
+      alert(t.invalidImage);
+      return;
     }
 
     try {
-      setUploadingPhoto(true)
+      setUploadingPhoto(true);
 
-      const cloudName = "dtlmi9fgx"
-      const uploadPreset = "colant_profiles"
+      const cloudName = "dtlmi9fgx";
+      const uploadPreset = "colant_profiles";
 
-      const uploadData = new FormData()
-      uploadData.append("file", file)
-      uploadData.append("upload_preset", uploadPreset)
-      uploadData.append("folder", "colant/profile-photos")
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+      uploadData.append("upload_preset", uploadPreset);
+      uploadData.append(
+        "folder",
+        "colant/profile-photos"
+      );
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -121,88 +240,106 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
           method: "POST",
           body: uploadData,
         }
-      )
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        console.error("Cloudinary error:", data)
+        console.error("Cloudinary error:", data);
 
         alert(
           data?.error?.message ||
-            "No fue posible subir la foto a Cloudinary."
-        )
+            t.cloudinaryUploadError
+        );
 
-        return
+        return;
       }
 
       if (!data.secure_url) {
-        alert("Cloudinary no devolvió la URL de la imagen.")
-        return
+        alert(t.missingImageUrl);
+        return;
       }
 
-      setFormData((prev) => ({
-        ...prev,
+      setFormData((previous) => ({
+        ...previous,
         profile_photo_url: data.secure_url,
-      }))
+      }));
     } catch (error) {
-      console.error(error)
-      alert("Error subiendo la foto.")
+      console.error(error);
+      alert(t.uploadError);
     } finally {
-      setUploadingPhoto(false)
+      setUploadingPhoto(false);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
     }
-  }
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (!formData.country_origin) {
-      alert("Selecciona un país.")
-      return
+      alert(t.selectCountryAlert);
+      return;
     }
 
     if (!formData.city_origin) {
-      alert("Selecciona una ciudad.")
-      return
+      alert(t.selectCityAlert);
+      return;
     }
 
     try {
-      setSaving(true)
+      setSaving(true);
 
       const selectedCountry = Country.getCountryByCode(
         formData.country_origin
-      )
+      );
 
       const profileData = {
         ...formData,
         country_origin:
-          selectedCountry?.name || formData.country_origin,
+          selectedCountry?.name ||
+          formData.country_origin,
+      };
+
+      const updatedProfile =
+        await updateProfile(profileData);
+
+      onProfileUpdated(updatedProfile);
+
+      if (
+        updatedProfile?.preferred_language &&
+        changeLanguage
+      ) {
+        changeLanguage(
+          updatedProfile.preferred_language
+        );
       }
 
-      const updatedProfile = await updateProfile(profileData)
-
-      onProfileUpdated(updatedProfile)
-
-      alert("Perfil actualizado correctamente")
-      onBack()
+      alert(t.profileUpdated);
+      onBack();
     } catch (error) {
-      console.error(error)
-      alert("Error al guardar los cambios del perfil")
+      console.error(error);
+
+      alert(
+        typeof error.response?.data?.detail === "string"
+          ? error.response.data.detail
+          : t.profileUpdateError
+      );
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const selectStyles = {
     control: (base, state) => ({
       ...base,
       minHeight: "58px",
       borderRadius: "16px",
-      borderColor: state.isFocused ? "#94a3b8" : "#e2e8f0",
+      borderColor: state.isFocused
+        ? "#94a3b8"
+        : "#e2e8f0",
       boxShadow: "none",
       paddingLeft: "6px",
       paddingRight: "6px",
@@ -233,9 +370,11 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
         : state.isFocused
           ? "#f1f5f9"
           : "#ffffff",
-      color: state.isSelected ? "#ffffff" : "#0f172a",
+      color: state.isSelected
+        ? "#ffffff"
+        : "#0f172a",
     }),
-  }
+  };
 
   return (
     <div className="min-h-[calc(100vh-110px)] bg-white">
@@ -245,12 +384,13 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             type="button"
             onClick={onBack}
             className="text-3xl"
+            aria-label={t.editProfile}
           >
             ←
           </button>
 
           <h2 className="text-xl font-bold">
-            Editar Perfil
+            {t.editProfile}
           </h2>
 
           <button
@@ -259,7 +399,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             disabled={saving || uploadingPhoto}
             className="text-sm font-bold text-red-500 disabled:opacity-60"
           >
-            GUARDAR
+            {t.saveTop}
           </button>
         </div>
 
@@ -268,7 +408,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             {formData.profile_photo_url ? (
               <img
                 src={formData.profile_photo_url}
-                alt="Profile"
+                alt={t.profilePhotoAlt}
                 className="h-28 w-28 rounded-full border-4 border-white/20 object-cover"
               />
             ) : (
@@ -282,6 +422,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
               onClick={handlePhotoClick}
               disabled={uploadingPhoto}
               className="absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg disabled:opacity-60"
+              aria-label={t.uploadingPhoto}
             >
               {uploadingPhoto ? "..." : "📷"}
             </button>
@@ -304,7 +445,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
         <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-lg">
           <div>
             <label className="text-sm font-semibold text-slate-500">
-              Nombre
+              {t.fullName}
             </label>
 
             <input
@@ -312,12 +453,13 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
               value={formData.full_name}
               onChange={handleChange}
               className="mt-1 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
+              required
             />
           </div>
 
           <div>
             <label className="text-sm font-semibold text-slate-500">
-              Tipo de sexo
+              {t.gender}
             </label>
 
             <div className="mt-2 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200">
@@ -331,7 +473,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                     : "bg-white py-3 font-bold text-slate-700"
                 }
               >
-                M
+                {t.male}
               </button>
 
               <button
@@ -344,14 +486,14 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                     : "bg-white py-3 font-bold text-slate-700"
                 }
               >
-                F
+                {t.female}
               </button>
             </div>
           </div>
 
           <div>
             <label className="text-sm font-semibold text-slate-500">
-              Email
+              {t.email}
             </label>
 
             <input
@@ -360,12 +502,13 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
               value={formData.email}
               onChange={handleChange}
               className="mt-1 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-slate-400"
+              required
             />
           </div>
 
           <div>
             <label className="text-sm font-semibold text-slate-500">
-              Fecha de nacimiento
+              {t.birthDate}
             </label>
 
             <input
@@ -379,7 +522,7 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
 
           <div>
             <label className="text-sm font-semibold text-slate-500">
-              País
+              {t.country}
             </label>
 
             <div className="mt-1">
@@ -388,21 +531,22 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                 value={
                   countries.find(
                     (country) =>
-                      country.value === formData.country_origin
+                      country.value ===
+                      formData.country_origin
                   ) || null
                 }
                 onChange={handleCountryChange}
-                placeholder="Selecciona un país"
+                placeholder={t.selectCountry}
                 isSearchable
                 styles={selectStyles}
-                noOptionsMessage={() => "No se encontraron países"}
+                noOptionsMessage={() => t.noCountries}
               />
             </div>
           </div>
 
           <div>
             <label className="text-sm font-semibold text-slate-500">
-              Ciudad de origen
+              {t.city}
             </label>
 
             <div className="mt-1">
@@ -411,28 +555,33 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
                 value={
                   cities.find(
                     (city) =>
-                      city.value === formData.city_origin
+                      city.value ===
+                      formData.city_origin
                   ) || null
                 }
                 onChange={handleCityChange}
                 placeholder={
                   formData.country_origin
-                    ? "Selecciona una ciudad"
-                    : "Primero selecciona un país"
+                    ? t.selectCity
+                    : t.selectCountryFirst
                 }
                 isDisabled={!formData.country_origin}
                 isSearchable
                 styles={selectStyles}
-                noOptionsMessage={() => "No se encontraron ciudades"}
+                noOptionsMessage={() => t.noCities}
               />
             </div>
           </div>
 
           {[
-            ["phone", "Número de celular", "text"],
-            ["arrival_date", "Fecha de llegada a Darwin", "date"],
-            ["industry", "¿En qué industria trabajan?", "text"],
-            ["visa_type", "Tipo de Visa", "text"],
+            ["phone", t.phone, "text"],
+            [
+              "arrival_date",
+              t.arrivalDate,
+              "date",
+            ],
+            ["industry", t.industry, "text"],
+            ["visa_type", t.visaType, "text"],
           ].map(([name, label, type]) => (
             <div key={name}>
               <label className="text-sm font-semibold text-slate-500">
@@ -449,21 +598,57 @@ function ProfileForm({ userProfile, onBack, onProfileUpdated }) {
             </div>
           ))}
 
+          <div>
+            <label className="text-sm font-semibold text-slate-500">
+              {t.preferredLanguage}
+            </label>
+
+            <div className="mt-2 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() =>
+                  handleLanguageChange("es")
+                }
+                className={
+                  formData.preferred_language === "es"
+                    ? "bg-slate-950 py-3 font-bold text-white"
+                    : "bg-white py-3 font-bold text-slate-700"
+                }
+              >
+                {t.spanish}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleLanguageChange("en")
+                }
+                className={
+                  formData.preferred_language === "en"
+                    ? "bg-slate-950 py-3 font-bold text-white"
+                    : "bg-white py-3 font-bold text-slate-700"
+                }
+              >
+                {t.english}
+              </button>
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={saving || uploadingPhoto}
             className="mt-4 w-full rounded-2xl bg-slate-950 py-4 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
           >
             {saving
-              ? "Guardando..."
+              ? t.saving
               : uploadingPhoto
-                ? "Subiendo foto..."
-                : "Guardar cambios"}
+                ? t.uploadingPhoto
+                : t.saveChanges}
           </button>
         </div>
       </form>
     </div>
-  )
+  );
 }
 
-export default ProfileForm
+export default ProfileForm;
