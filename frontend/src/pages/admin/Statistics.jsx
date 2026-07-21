@@ -4,8 +4,6 @@ import { API_URL } from "../../config";
 
 import DashboardHeader from "./dashboard/DashboardHeader";
 import StatsCards from "./dashboard/StatsCards";
-import DistributionChart from "./dashboard/DistributionChart";
-import GrowthChart from "./dashboard/GrowthChart";
 
 function StatisticsAdmin() {
   const [statistics, setStatistics] = useState({
@@ -13,15 +11,11 @@ function StatisticsAdmin() {
     total_events: 0,
     total_photos: 0,
     total_notifications: 0,
-    users_by_visa: [],
-    users_by_country: [],
-    users_by_city: [],
-    users_by_industry: [],
-    user_growth: [],
   });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   useEffect(() => {
     const loadStatistics = async () => {
@@ -63,21 +57,6 @@ function StatisticsAdmin() {
             response.data.total_notifications ??
             response.data.notifications ??
             0,
-
-          users_by_visa:
-            response.data.users_by_visa ?? [],
-
-          users_by_country:
-            response.data.users_by_country ?? [],
-
-          users_by_city:
-            response.data.users_by_city ?? [],
-
-          users_by_industry:
-            response.data.users_by_industry ?? [],
-
-          user_growth:
-            response.data.user_growth ?? [],
         });
 
         setError("");
@@ -119,30 +98,101 @@ function StatisticsAdmin() {
     loadStatistics();
   }, []);
 
+  const downloadPDF = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("No administrator session was found.");
+      return;
+    }
+
+    try {
+      setDownloadingPDF(true);
+
+      const response = await axios.get(
+        `${API_URL}/admin/statistics/pdf`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        }
+      );
+
+      const pdfBlob = new Blob(
+        [response.data],
+        {
+          type: "application/pdf",
+        }
+      );
+
+      const pdfUrl =
+        window.URL.createObjectURL(pdfBlob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = pdfUrl;
+      link.download =
+        "colant-connect-complete-report.pdf";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(pdfUrl);
+    } catch (requestError) {
+      console.error(
+        "Error downloading PDF:",
+        requestError.response?.data || requestError
+      );
+
+      if (requestError.response?.status === 401) {
+        alert(
+          "Your session has expired. Please log in again."
+        );
+      } else if (requestError.response?.status === 403) {
+        alert(
+          "Only administrators can download this report."
+        );
+      } else if (requestError.response?.status === 404) {
+        alert(
+          "The PDF report is not available yet."
+        );
+      } else {
+        alert(
+          "The PDF report could not be generated."
+        );
+      }
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
   const stats = [
     {
       title: "Registered Users",
       value: statistics.total_users,
       description:
-        "Real users registered in COLANT Connect.",
+        "Users registered in COLANT Connect.",
     },
     {
       title: "Events",
       value: statistics.total_events,
       description:
-        "Events currently stored in the platform.",
+        "Events stored in the platform.",
     },
     {
       title: "Gallery Photos",
       value: statistics.total_photos,
       description:
-        "Photos currently stored in the gallery.",
+        "Photos stored in the gallery.",
     },
     {
       title: "Notifications",
       value: statistics.total_notifications,
       description:
-        "Notifications created in COLANT Connect.",
+        "Notifications created in the platform.",
     },
   ];
 
@@ -153,7 +203,7 @@ function StatisticsAdmin() {
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-950" />
 
           <p className="mt-4 font-semibold text-slate-600">
-            Loading real statistics...
+            Loading statistics...
           </p>
         </div>
       </div>
@@ -180,33 +230,56 @@ function StatisticsAdmin() {
 
       <StatsCards stats={stats} />
 
-      <GrowthChart
-        data={statistics.user_growth}
-      />
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-3xl">
+            📄
+          </div>
 
-      <DistributionChart
-        title="Users by Visa Type"
-        data={statistics.users_by_visa}
-        field="visa_type"
-      />
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900">
+              Complete Report
+            </h2>
 
-      <DistributionChart
-        title="Users by Country"
-        data={statistics.users_by_country}
-        field="country"
-      />
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Download a complete PDF report with the
+              platform totals and the registered users.
+            </p>
+          </div>
+        </div>
 
-      <DistributionChart
-        title="Users by City"
-        data={statistics.users_by_city}
-        field="city"
-      />
+        <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+          <h3 className="font-bold text-slate-900">
+            The report includes:
+          </h3>
 
-      <DistributionChart
-        title="Users by Industry"
-        data={statistics.users_by_industry}
-        field="industry"
-      />
+          <div className="mt-4 space-y-3 text-sm text-slate-600">
+            <p>✓ Registered users summary</p>
+            <p>✓ Full name and email</p>
+            <p>✓ Telephone number</p>
+            <p>✓ Country and city of origin</p>
+            <p>✓ Visa type</p>
+            <p>✓ Industry</p>
+            <p>✓ Preferred language</p>
+            <p>✓ Registration date</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={downloadPDF}
+          disabled={downloadingPDF}
+          className="mt-6 w-full rounded-2xl bg-blue-950 px-5 py-4 font-bold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {downloadingPDF
+            ? "Generating PDF..."
+            : "⬇ Download Complete Report (PDF)"}
+        </button>
+
+        <p className="mt-4 text-center text-xs text-slate-500">
+          COLANT Connect administrative report
+        </p>
+      </section>
     </div>
   );
 }
