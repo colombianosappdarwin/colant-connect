@@ -2,16 +2,24 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../../config";
 
+import DashboardHeader from "./dashboard/DashboardHeader";
+import StatsCards from "./dashboard/StatsCards";
+import DistributionChart from "./dashboard/DistributionChart";
+import GrowthChart from "./dashboard/GrowthChart";
+
 function StatisticsAdmin() {
   const [statistics, setStatistics] = useState({
     total_users: 0,
     total_events: 0,
     total_photos: 0,
     total_notifications: 0,
+
     users_by_visa: [],
     users_by_country: [],
     users_by_city: [],
     users_by_industry: [],
+
+    user_growth: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -69,7 +77,11 @@ function StatisticsAdmin() {
 
           users_by_industry:
             response.data.users_by_industry ?? [],
+
+          user_growth:
+            response.data.user_growth ?? [],
         });
+
       } catch (requestError) {
         console.error(
           "Error loading statistics:",
@@ -77,18 +89,13 @@ function StatisticsAdmin() {
         );
 
         if (requestError.response?.status === 401) {
-          setError(
-            "Your session has expired. Please log in again."
-          );
+          setError("Your session has expired. Please log in again.");
         } else if (requestError.response?.status === 403) {
-          setError(
-            "Only administrators can access these statistics."
-          );
+          setError("Only administrators can access these statistics.");
         } else {
-          setError(
-            "The statistics could not be loaded."
-          );
+          setError("The statistics could not be loaded.");
         }
+
       } finally {
         setLoading(false);
       }
@@ -101,83 +108,30 @@ function StatisticsAdmin() {
     {
       title: "Registered Users",
       value: statistics.total_users,
-      icon: "👥",
       description: "Real users registered in COLANT Connect.",
     },
     {
       title: "Events",
       value: statistics.total_events,
-      icon: "🎉",
       description: "Events currently stored in the platform.",
     },
     {
       title: "Gallery Photos",
       value: statistics.total_photos,
-      icon: "🖼️",
       description: "Photos currently stored in the gallery.",
     },
     {
       title: "Notifications",
       value: statistics.total_notifications,
-      icon: "📢",
       description: "Notifications created in COLANT Connect.",
     },
   ];
-
-  const renderDistribution = (title, data) => {
-    if (!Array.isArray(data) || data.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-lg">
-        <h2 className="mb-4 text-xl font-extrabold text-blue-950">
-          {title}
-        </h2>
-
-        <div className="space-y-3">
-          {data.map((item, index) => {
-            const label =
-              item.name ??
-              item.label ??
-              item.country ??
-              item.city ??
-              item.industry ??
-              item.visa_type ??
-              "Not specified";
-
-            const total =
-              item.total ??
-              item.count ??
-              item.value ??
-              0;
-
-            return (
-              <div
-                key={`${label}-${index}`}
-                className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
-              >
-                <span className="text-sm font-semibold text-slate-700">
-                  {label || "Not specified"}
-                </span>
-
-                <span className="rounded-full bg-blue-950 px-3 py-1 text-sm font-bold text-white">
-                  {total}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-950" />
-
           <p className="mt-4 font-semibold text-slate-600">
             Loading real statistics...
           </p>
@@ -201,61 +155,40 @@ function StatisticsAdmin() {
   }
 
   return (
-    <div>
-      <h1 className="mb-2 text-3xl font-extrabold text-blue-950">
-        Statistics
-      </h1>
+    <div className="space-y-6">
 
-      <p className="mb-6 text-slate-600">
-        Real information obtained from the COLANT Connect database.
-      </p>
+      <DashboardHeader />
 
-      <div className="mb-8 grid grid-cols-2 gap-4">
-        {stats.map((item) => (
-          <div
-            key={item.title}
-            className="rounded-3xl border border-slate-100 bg-white p-5 shadow-lg"
-          >
-            <div className="mb-3 text-3xl">
-              {item.icon}
-            </div>
+      <StatsCards stats={stats} />
 
-            <p className="text-2xl font-extrabold text-blue-950">
-              {item.value}
-            </p>
+      <GrowthChart
+        data={statistics.user_growth}
+      />
 
-            <p className="mt-1 text-sm font-bold text-slate-800">
-              {item.title}
-            </p>
+      <DistributionChart
+        title="Users by Visa Type"
+        data={statistics.users_by_visa}
+        field="visa_type"
+      />
 
-            <p className="mt-2 text-xs leading-5 text-slate-500">
-              {item.description}
-            </p>
-          </div>
-        ))}
-      </div>
+      <DistributionChart
+        title="Users by Country"
+        data={statistics.users_by_country}
+        field="country"
+      />
 
-      <div className="space-y-5">
-        {renderDistribution(
-          "Users by Visa Type",
-          statistics.users_by_visa
-        )}
+      <DistributionChart
+        title="Users by City"
+        data={statistics.users_by_city}
+        field="city"
+      />
 
-        {renderDistribution(
-          "Users by Country",
-          statistics.users_by_country
-        )}
+      <DistributionChart
+        title="Users by Industry"
+        data={statistics.users_by_industry}
+        field="industry"
+      />
 
-        {renderDistribution(
-          "Users by City",
-          statistics.users_by_city
-        )}
-
-        {renderDistribution(
-          "Users by Industry",
-          statistics.users_by_industry
-        )}
-      </div>
     </div>
   );
 }
