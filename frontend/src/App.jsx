@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "./config";
-import { initializePushNotifications } from "./pushNotifications";
+import { initializePushNotifications } from "./services/pushNotifications";
 
 import Register from "./Register";
 import Login from "./Login";
