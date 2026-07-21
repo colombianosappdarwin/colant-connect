@@ -18,10 +18,12 @@ router = APIRouter(
 
 
 def require_admin(current_user: User):
-    if current_user.role != "admin":
+    role = (current_user.role or "").strip().lower()
+
+    if role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administrator access required"
+            detail=f"Administrator access required. Current role: {role}"
         )
 
 
