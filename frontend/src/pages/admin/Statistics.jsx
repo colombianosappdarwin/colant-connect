@@ -1,98 +1,260 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_URL } from "../../config";
+
 function StatisticsAdmin() {
+  const [statistics, setStatistics] = useState({
+    total_users: 0,
+    total_events: 0,
+    total_photos: 0,
+    total_notifications: 0,
+    users_by_visa: [],
+    users_by_country: [],
+    users_by_city: [],
+    users_by_industry: [],
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadStatistics = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("No administrator session was found.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `${API_URL}/admin/statistics`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setStatistics({
+          total_users:
+            response.data.total_users ??
+            response.data.registered_users ??
+            0,
+
+          total_events:
+            response.data.total_events ??
+            response.data.events ??
+            0,
+
+          total_photos:
+            response.data.total_photos ??
+            response.data.gallery_photos ??
+            0,
+
+          total_notifications:
+            response.data.total_notifications ??
+            response.data.notifications ??
+            0,
+
+          users_by_visa:
+            response.data.users_by_visa ?? [],
+
+          users_by_country:
+            response.data.users_by_country ?? [],
+
+          users_by_city:
+            response.data.users_by_city ?? [],
+
+          users_by_industry:
+            response.data.users_by_industry ?? [],
+        });
+      } catch (requestError) {
+        console.error(
+          "Error loading statistics:",
+          requestError.response?.data || requestError
+        );
+
+        if (requestError.response?.status === 401) {
+          setError(
+            "Your session has expired. Please log in again."
+          );
+        } else if (requestError.response?.status === 403) {
+          setError(
+            "Only administrators can access these statistics."
+          );
+        } else {
+          setError(
+            "The statistics could not be loaded."
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStatistics();
+  }, []);
+
   const stats = [
     {
       title: "Registered Users",
-      value: "120+",
+      value: statistics.total_users,
       icon: "👥",
-      description: "Community members registered in COLANT Connect.",
+      description: "Real users registered in COLANT Connect.",
     },
     {
       title: "Events",
-      value: "1",
+      value: statistics.total_events,
       icon: "🎉",
-      description: "Active community events managed in the platform.",
+      description: "Events currently stored in the platform.",
     },
     {
       title: "Gallery Photos",
-      value: "40+",
+      value: statistics.total_photos,
       icon: "🖼️",
-      description: "Photos connected to events and community activities.",
+      description: "Photos currently stored in the gallery.",
     },
     {
       title: "Notifications",
-      value: "Active",
+      value: statistics.total_notifications,
       icon: "📢",
-      description: "General and event-based communication system.",
+      description: "Notifications created in COLANT Connect.",
     },
   ];
 
-  const insights = [
-    "Users can be analysed by country, city, industry and visa type.",
-    "Event attendance helps measure community engagement.",
-    "Gallery activity supports cultural documentation.",
-    "Admin data can support future sponsors and grant applications.",
-  ];
+  const renderDistribution = (title, data) => {
+    if (!Array.isArray(data) || data.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-lg">
+        <h2 className="mb-4 text-xl font-extrabold text-blue-950">
+          {title}
+        </h2>
+
+        <div className="space-y-3">
+          {data.map((item, index) => {
+            const label =
+              item.name ??
+              item.label ??
+              item.country ??
+              item.city ??
+              item.industry ??
+              item.visa_type ??
+              "Not specified";
+
+            const total =
+              item.total ??
+              item.count ??
+              item.value ??
+              0;
+
+            return (
+              <div
+                key={`${label}-${index}`}
+                className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+              >
+                <span className="text-sm font-semibold text-slate-700">
+                  {label || "Not specified"}
+                </span>
+
+                <span className="rounded-full bg-blue-950 px-3 py-1 text-sm font-bold text-white">
+                  {total}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-950" />
+
+          <p className="mt-4 font-semibold text-slate-600">
+            Loading real statistics...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
+        <h2 className="text-xl font-extrabold text-red-700">
+          Statistics unavailable
+        </h2>
+
+        <p className="mt-2 text-sm text-red-600">
+          {error}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="text-3xl font-extrabold text-blue-950 mb-2">
+      <h1 className="mb-2 text-3xl font-extrabold text-blue-950">
         Statistics
       </h1>
 
-      <p className="text-slate-600 mb-6">
-        Review user, event and community data.
+      <p className="mb-6 text-slate-600">
+        Real information obtained from the COLANT Connect database.
       </p>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-4">
         {stats.map((item) => (
           <div
             key={item.title}
-            className="bg-white rounded-3xl shadow-lg border border-slate-100 p-5"
+            className="rounded-3xl border border-slate-100 bg-white p-5 shadow-lg"
           >
-            <div className="text-3xl mb-3">{item.icon}</div>
+            <div className="mb-3 text-3xl">
+              {item.icon}
+            </div>
 
             <p className="text-2xl font-extrabold text-blue-950">
               {item.value}
             </p>
 
-            <p className="text-sm font-bold text-slate-800 mt-1">
+            <p className="mt-1 text-sm font-bold text-slate-800">
               {item.title}
             </p>
 
-            <p className="text-xs text-slate-500 mt-2 leading-5">
+            <p className="mt-2 text-xs leading-5 text-slate-500">
               {item.description}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="bg-blue-950 text-white rounded-3xl p-6 shadow-xl mb-6">
-        <h2 className="text-xl font-extrabold mb-3">
-          Community Insights
-        </h2>
+      <div className="space-y-5">
+        {renderDistribution(
+          "Users by Visa Type",
+          statistics.users_by_visa
+        )}
 
-        <p className="text-blue-100 text-sm leading-6">
-          COLANT Connect collects structured information that helps understand
-          the Colombian community in Australia and supports better planning for
-          events, partnerships and community programs.
-        </p>
-      </div>
+        {renderDistribution(
+          "Users by Country",
+          statistics.users_by_country
+        )}
 
-      <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-5">
-        <h2 className="text-xl font-extrabold text-blue-950 mb-4">
-          Data Collected
-        </h2>
+        {renderDistribution(
+          "Users by City",
+          statistics.users_by_city
+        )}
 
-        <div className="space-y-3">
-          {insights.map((item) => (
-            <div
-              key={item}
-              className="bg-slate-50 rounded-2xl p-4 text-sm text-slate-700"
-            >
-              ✅ {item}
-            </div>
-          ))}
-        </div>
+        {renderDistribution(
+          "Users by Industry",
+          statistics.users_by_industry
+        )}
       </div>
     </div>
   );
