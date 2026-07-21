@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -8,9 +7,7 @@ from app.models.user_model import User
 from app.models.event import Event
 from app.gallery.gallery import Gallery
 from app.models.notification import Notification
-from app.admin.pdf_report import generate_statistics_pdf
 
-# Cambia este import por el que ya uses en tu proyecto
 from app.core.security import get_current_user
 
 
@@ -153,23 +150,3 @@ def get_admin_statistics(
 ):
     require_admin(current_user)
     return build_statistics_data(db)
-
-
-@router.get("/statistics/pdf")
-def download_statistics_pdf(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    require_admin(current_user)
-
-    statistics = build_statistics_data(db)
-    pdf_buffer = generate_statistics_pdf(statistics)
-
-    return StreamingResponse(
-        pdf_buffer,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition":
-                'attachment; filename="colant-connect-statistics.pdf"'
-        }
-    )
