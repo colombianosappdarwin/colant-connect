@@ -7,7 +7,6 @@ from app.models.user_model import User
 from app.models.event import Event
 from app.gallery.gallery import Gallery
 from app.models.notification import Notification
-
 from app.core.security import get_current_user
 
 
@@ -20,7 +19,7 @@ router = APIRouter(
 def require_admin(current_user: User):
     role = (current_user.role or "").strip().lower()
 
-    if role != "admin":
+    if role not in ["admin", "super_admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Administrator access required. Current role: {role}"
@@ -151,4 +150,5 @@ def get_admin_statistics(
     current_user: User = Depends(get_current_user)
 ):
     require_admin(current_user)
+
     return build_statistics_data(db)
