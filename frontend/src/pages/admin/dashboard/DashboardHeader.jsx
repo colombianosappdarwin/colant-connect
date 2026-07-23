@@ -19,40 +19,38 @@ function DashboardHeader({ language = "es" }) {
 
   const t = translations[language] || translations.es;
 
-  const today = new Date().toLocaleDateString(
-    t.locale,
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  );
+  const today = new Date().toLocaleDateString(t.locale, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
   return (
-    <div className="mb-8 rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 p-6 shadow-2xl sm:p-8">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 shadow-2xl sm:p-7">
+      <div className="flex flex-col gap-5">
         <div className="min-w-0">
-          <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-400 sm:text-sm">
             COLANT CONNECT
           </p>
 
-          <h1 className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
+          <h1 className="mt-2 break-words text-2xl font-extrabold leading-tight text-white sm:text-4xl">
             {t.title}
           </h1>
 
-          <p className="mt-3 max-w-2xl leading-6 text-slate-300">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
             {t.description}
           </p>
         </div>
 
-        <div className="w-fit rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 text-white shadow-lg">
-          <div className="flex items-center gap-3">
-            <CalendarDays size={22} />
+        <div className="flex w-fit items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white shadow-lg">
+          <CalendarDays
+            size={20}
+            className="shrink-0 text-blue-400"
+          />
 
-            <span className="font-semibold">
-              {today}
-            </span>
-          </div>
+          <span className="whitespace-nowrap text-sm font-semibold sm:text-base">
+            {today}
+          </span>
         </div>
       </div>
     </div>
