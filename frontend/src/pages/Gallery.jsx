@@ -1,6 +1,3 @@
-Gallery_bilingual_complete.jsx
-
-
 import { useEffect, useState } from "react"
 import axios from "axios"
 import {
