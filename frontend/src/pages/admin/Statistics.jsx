@@ -65,17 +65,21 @@ function StatisticsAdmin({ language = "es" }) {
         "✓ Resumen de usuarios registrados",
       fullNameEmail:
         "✓ Nombre completo y correo electrónico",
-      telephoneNumber: "✓ Número telefónico",
+      telephoneNumber:
+        "✓ Número telefónico",
       countryCityOrigin:
         "✓ País y ciudad de origen",
-      visaType: "✓ Tipo de visa",
-      industry: "✓ Industria",
+      visaType:
+        "✓ Tipo de visa",
+      industry:
+        "✓ Industria",
       preferredLanguage:
         "✓ Idioma preferido",
       registrationDate:
         "✓ Fecha de registro",
 
-      generatingPDF: "Generando PDF...",
+      generatingPDF:
+        "Generando PDF...",
       downloadCompleteReport:
         "⬇ Descargar reporte completo (PDF)",
       reportFooter:
@@ -101,19 +105,23 @@ function StatisticsAdmin({ language = "es" }) {
       pdfError:
         "The PDF report could not be generated.",
 
-      registeredUsers: "Registered Users",
+      registeredUsers:
+        "Registered Users",
       registeredUsersDescription:
         "Users registered in COLANT Connect.",
 
-      events: "Events",
+      events:
+        "Events",
       eventsDescription:
         "Events stored in the platform.",
 
-      galleryPhotos: "Gallery Photos",
+      galleryPhotos:
+        "Gallery Photos",
       galleryPhotosDescription:
         "Photos stored in the gallery.",
 
-      notifications: "Notifications",
+      notifications:
+        "Notifications",
       notificationsDescription:
         "Notifications created in the platform.",
 
@@ -122,7 +130,8 @@ function StatisticsAdmin({ language = "es" }) {
       statisticsUnavailable:
         "Statistics unavailable",
 
-      completeReport: "Complete Report",
+      completeReport:
+        "Complete Report",
       completeReportDescription:
         "Download a complete PDF report with the platform totals and the registered users.",
 
@@ -136,14 +145,17 @@ function StatisticsAdmin({ language = "es" }) {
         "✓ Telephone number",
       countryCityOrigin:
         "✓ Country and city of origin",
-      visaType: "✓ Visa type",
-      industry: "✓ Industry",
+      visaType:
+        "✓ Visa type",
+      industry:
+        "✓ Industry",
       preferredLanguage:
         "✓ Preferred language",
       registrationDate:
         "✓ Registration date",
 
-      generatingPDF: "Generating PDF...",
+      generatingPDF:
+        "Generating PDF...",
       downloadCompleteReport:
         "⬇ Download Complete Report (PDF)",
       reportFooter:
@@ -155,17 +167,25 @@ function StatisticsAdmin({ language = "es" }) {
     translations[language] || translations.es;
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadStatistics = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setError(t.noSession);
-        setLoading(false);
+        if (isMounted) {
+          setError(t.noSession);
+          setLoading(false);
+        }
+
         return;
       }
 
       try {
-        setLoading(true);
+        if (isMounted) {
+          setLoading(true);
+          setError("");
+        }
 
         const response = await axios.get(
           `${API_URL}/admin/statistics`,
@@ -176,29 +196,31 @@ function StatisticsAdmin({ language = "es" }) {
           }
         );
 
+        if (!isMounted) {
+          return;
+        }
+
         setStatistics({
           total_users:
-            response.data.total_users ??
-            response.data.registered_users ??
+            response.data?.total_users ??
+            response.data?.registered_users ??
             0,
 
           total_events:
-            response.data.total_events ??
-            response.data.events ??
+            response.data?.total_events ??
+            response.data?.events ??
             0,
 
           total_photos:
-            response.data.total_photos ??
-            response.data.gallery_photos ??
+            response.data?.total_photos ??
+            response.data?.gallery_photos ??
             0,
 
           total_notifications:
-            response.data.total_notifications ??
-            response.data.notifications ??
+            response.data?.total_notifications ??
+            response.data?.notifications ??
             0,
         });
-
-        setError("");
       } catch (requestError) {
         console.error(
           "Error loading statistics:",
@@ -206,26 +228,27 @@ function StatisticsAdmin({ language = "es" }) {
             requestError
         );
 
+        if (!isMounted) {
+          return;
+        }
+
+        const status =
+          requestError.response?.status;
+
         const backendMessage =
           requestError.response?.data?.detail;
 
-        if (
-          requestError.response?.status === 401
-        ) {
+        if (status === 401) {
           setError(
             backendMessage ||
               t.sessionExpired
           );
-        } else if (
-          requestError.response?.status === 403
-        ) {
+        } else if (status === 403) {
           setError(
             backendMessage ||
               t.onlyAdmins
           );
-        } else if (
-          requestError.response?.status === 404
-        ) {
+        } else if (status === 404) {
           setError(
             backendMessage ||
               t.endpointNotFound
@@ -237,18 +260,30 @@ function StatisticsAdmin({ language = "es" }) {
           );
         }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadStatistics();
-  }, [language]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    t.endpointNotFound,
+    t.loadError,
+    t.noSession,
+    t.onlyAdmins,
+    t.sessionExpired,
+  ]);
 
   const downloadPDF = async () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert(t.noSession);
+      window.alert(t.noSession);
       return;
     }
 
@@ -294,20 +329,17 @@ function StatisticsAdmin({ language = "es" }) {
           requestError
       );
 
-      if (
-        requestError.response?.status === 401
-      ) {
-        alert(t.sessionExpired);
-      } else if (
-        requestError.response?.status === 403
-      ) {
-        alert(t.pdfOnlyAdmins);
-      } else if (
-        requestError.response?.status === 404
-      ) {
-        alert(t.pdfUnavailable);
+      const status =
+        requestError.response?.status;
+
+      if (status === 401) {
+        window.alert(t.sessionExpired);
+      } else if (status === 403) {
+        window.alert(t.pdfOnlyAdmins);
+      } else if (status === 404) {
+        window.alert(t.pdfUnavailable);
       } else {
-        alert(t.pdfError);
+        window.alert(t.pdfError);
       }
     } finally {
       setDownloadingPDF(false);
@@ -316,24 +348,28 @@ function StatisticsAdmin({ language = "es" }) {
 
   const stats = [
     {
+      id: "users",
       title: t.registeredUsers,
       value: statistics.total_users,
       description:
         t.registeredUsersDescription,
     },
     {
+      id: "events",
       title: t.events,
       value: statistics.total_events,
       description:
         t.eventsDescription,
     },
     {
+      id: "photos",
       title: t.galleryPhotos,
       value: statistics.total_photos,
       description:
         t.galleryPhotosDescription,
     },
     {
+      id: "notifications",
       title: t.notifications,
       value:
         statistics.total_notifications,

@@ -6,7 +6,7 @@ import Users from "./admin/Users";
 import EventsAdmin from "./admin/EventsAdmin";
 import GalleryAdmin from "./admin/GalleryAdmin";
 import NotificationsAdmin from "./admin/NotificationsAdmin";
-import StatisticsAdmin from "./admin/Statistics";
+import StatisticsAdmin from "./admin/StatisticsAdmin";
 import SettingsAdmin from "./admin/SettingsAdmin";
 
 function AdminDashboard({

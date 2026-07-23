@@ -5,18 +5,34 @@ import {
   Bell,
 } from "lucide-react";
 
-const icons = {
-  "Registered Users": Users,
-  Events: CalendarDays,
-  "Gallery Photos": Image,
-  Notifications: Bell,
-};
+function StatsCards({ stats = [] }) {
+  const getIcon = (title) => {
+    switch (title) {
+      case "Registered Users":
+      case "Usuarios registrados":
+        return Users;
 
-function StatsCards({ stats }) {
+      case "Events":
+      case "Eventos":
+        return CalendarDays;
+
+      case "Gallery Photos":
+      case "Fotos de la galería":
+        return Image;
+
+      case "Notifications":
+      case "Notificaciones":
+        return Bell;
+
+      default:
+        return Users;
+    }
+  };
+
   return (
     <div className="mb-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
       {stats.map((item) => {
-        const Icon = icons[item.title];
+        const Icon = getIcon(item.title);
 
         return (
           <div
