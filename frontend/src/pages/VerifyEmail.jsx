@@ -1,6 +1,3 @@
-VerifyEmail_bilingual.jsx
-
-
 import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
@@ -33,6 +30,7 @@ function VerifyEmail({
       error:
         "No se pudo verificar el correo. Revisa el código e inténtalo nuevamente.",
     },
+
     en: {
       title: "Verify your email",
       subtitle:
@@ -93,7 +91,9 @@ function VerifyEmail({
         window.location.reload();
       }
     } catch (error) {
-      console.error(error.response?.data || error);
+      console.error(
+        error.response?.data || error
+      );
 
       alert(
         typeof error.response?.data?.detail === "string"
@@ -150,7 +150,10 @@ function VerifyEmail({
           {t.subtitle}
         </p>
 
-        <form onSubmit={handleVerify} className="mt-8 space-y-5">
+        <form
+          onSubmit={handleVerify}
+          className="mt-8 space-y-5"
+        >
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
               {t.email}
@@ -159,7 +162,9 @@ function VerifyEmail({
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
               placeholder={t.emailPlaceholder}
               autoComplete="email"
               className="w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-700"
@@ -176,7 +181,9 @@ function VerifyEmail({
               type="text"
               value={code}
               onChange={(event) =>
-                setCode(event.target.value.replace(/\D/g, ""))
+                setCode(
+                  event.target.value.replace(/\D/g, "")
+                )
               }
               placeholder={t.codePlaceholder}
               inputMode="numeric"
