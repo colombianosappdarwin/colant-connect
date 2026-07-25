@@ -1,18 +1,29 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from sqlalchemy.orm import Session
 from datetime import datetime
 from uuid import UUID
 
-from app.database.database import get_db
-from app.models.event import Event
-from app.events.attendee_model import EventAttendee
-from app.core.security import verify_token
-from app.models.user_model import User
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
 from app.cloudinary_service import upload_image
+from app.core.security import verify_token
+from app.database.database import get_db
+from app.events.attendee_model import EventAttendee
+from app.gallery.gallery import Gallery
+from app.models.event import Event
+from app.models.user_model import User
+
 
 router = APIRouter(
     prefix="/events",
-    tags=["Events"]
+    tags=["Events"],
 )
 
 
@@ -28,7 +39,7 @@ def create_event(
     location: str = Form(...),
     event_date: datetime = Form(...),
     image: UploadFile = File(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     image_url = ""
 
@@ -41,7 +52,7 @@ def create_event(
         location=location,
         event_date=event_date,
         image_url=image_url,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     db.add(new_event)
@@ -59,16 +70,27 @@ def update_event(
     location: str = Form(...),
     event_date: datetime = Form(...),
     image: UploadFile = File(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    event_uuid = UUID(event_id)
+    try:
+        event_uuid = UUID(event_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid event ID",
+        )
 
-    db_event = db.query(Event).filter(
-        Event.id == event_uuid
-    ).first()
+    db_event = (
+        db.query(Event)
+        .filter(Event.id == event_uuid)
+        .first()
+    )
 
     if not db_event:
-        return {"error": "Event not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found",
+        )
 
     db_event.title = title
     db_event.description = description
@@ -87,56 +109,124 @@ def update_event(
 @router.delete("/{event_id}")
 def delete_event(
     event_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    event_uuid = UUID(event_id)
+    try:
+        try:
+            event_uuid = UUID(event_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid event ID",
+            )
 
-    db_event = db.query(Event).filter(
-        Event.id == event_uuid
-    ).first()
+        db_event = (
+            db.query(Event)
+            .filter(Event.id == event_uuid)
+            .first()
+        )
 
-    if not db_event:
-        return {"error": "Event not found"}
+        if not db_event:
+            raise HTTPException(
+                status_code=404,
+                detail="Event not found",
+            )
 
-    db.delete(db_event)
-    db.commit()
+        # Primero elimina los asistentes relacionados con el evento.
+        db.query(EventAttendee).filter(
+            EventAttendee.event_id == event_uuid
+        ).delete(synchronize_session=False)
 
-    return {"message": "Event deleted successfully"}
+        # Después elimina las fotografías relacionadas con el evento.
+        db.query(Gallery).filter(
+            Gallery.event_id == event_uuid
+        ).delete(synchronize_session=False)
+
+        # Finalmente elimina el evento.
+        db.delete(db_event)
+        db.commit()
+
+        return {
+            "message": "Event deleted successfully",
+            "event_id": str(event_uuid),
+        }
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except SQLAlchemyError as error:
+        db.rollback()
+        print(f"Database error deleting event: {error}")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Database error deleting event",
+        )
+
+    except Exception as error:
+        db.rollback()
+        print(f"Unexpected error deleting event: {error}")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Unexpected error deleting event",
+        )
 
 
 @router.post("/{event_id}/join")
 def join_event(
     event_id: str,
     email: str = Depends(verify_token),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(
-        User.email == email
-    ).first()
+    user = (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
 
     if not user:
-        return {"error": "User not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
 
-    event_uuid = UUID(event_id)
+    try:
+        event_uuid = UUID(event_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid event ID",
+        )
 
-    event = db.query(Event).filter(
-        Event.id == event_uuid
-    ).first()
+    event = (
+        db.query(Event)
+        .filter(Event.id == event_uuid)
+        .first()
+    )
 
     if not event:
-        return {"error": "Event not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found",
+        )
 
-    existing = db.query(EventAttendee).filter(
-        EventAttendee.user_id == user.id,
-        EventAttendee.event_id == event_uuid
-    ).first()
+    existing = (
+        db.query(EventAttendee)
+        .filter(
+            EventAttendee.user_id == user.id,
+            EventAttendee.event_id == event_uuid,
+        )
+        .first()
+    )
 
     if existing:
         return {"message": "Already joined"}
 
     attendee = EventAttendee(
         user_id=user.id,
-        event_id=event_uuid
+        event_id=event_uuid,
     )
 
     db.add(attendee)
@@ -148,33 +238,45 @@ def join_event(
 @router.get("/{event_id}/attendees")
 def get_event_attendees(
     event_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    event_uuid = UUID(event_id)
+    try:
+        event_uuid = UUID(event_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid event ID",
+        )
 
-    attendees = db.query(EventAttendee).filter(
-        EventAttendee.event_id == event_uuid
-    ).all()
+    attendees = (
+        db.query(EventAttendee)
+        .filter(EventAttendee.event_id == event_uuid)
+        .all()
+    )
 
     result = []
 
     for attendee in attendees:
-        user = db.query(User).filter(
-            User.id == attendee.user_id
-        ).first()
+        user = (
+            db.query(User)
+            .filter(User.id == attendee.user_id)
+            .first()
+        )
 
         if user:
-            result.append({
-                "id": str(user.id),
-                "full_name": user.full_name,
-                "email": user.email,
-                "city_origin": user.city_origin,
-                "industry": user.industry,
-                "visa_type": user.visa_type
-            })
+            result.append(
+                {
+                    "id": str(user.id),
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "city_origin": user.city_origin,
+                    "industry": user.industry,
+                    "visa_type": user.visa_type,
+                }
+            )
 
     return {
         "event_id": event_id,
         "count": len(result),
-        "attendees": result
+        "attendees": result,
     }
