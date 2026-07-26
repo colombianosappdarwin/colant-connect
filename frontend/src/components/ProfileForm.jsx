@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Select from "react-select";
 import { Country, City } from "country-state-city";
-import { updateProfile } from "../services/profileService";
+import { updateProfile, deleteAccount } from "../services/profileService";
 
 function ProfileForm({
   userProfile,
@@ -51,6 +51,19 @@ function ProfileForm({
       profileUpdated: "Perfil actualizado correctamente.",
       profileUpdateError:
         "Error al guardar los cambios del perfil.",
+      deleteAccountTitle: "Eliminar cuenta",
+      deleteAccountDescription:
+        "Esta acción eliminará permanentemente tu cuenta y no se puede deshacer.",
+      deleteAccountButton: "Eliminar mi cuenta",
+      confirmDeleteTitle: "Confirmar eliminación",
+      passwordLabel: "Contraseña",
+      passwordPlaceholder: "Ingresa tu contraseña",
+      cancel: "Cancelar",
+      deleting: "Eliminando...",
+      confirmDeleteButton: "Eliminar permanentemente",
+      passwordRequired: "Debes ingresar tu contraseña.",
+      deleteSuccess: "Tu cuenta fue eliminada correctamente.",
+      deleteError: "No fue posible eliminar la cuenta.",
     },
     en: {
       editProfile: "Edit profile",
@@ -90,6 +103,19 @@ function ProfileForm({
       profileUpdated: "Profile updated successfully.",
       profileUpdateError:
         "Error saving the profile changes.",
+      deleteAccountTitle: "Delete account",
+      deleteAccountDescription:
+        "This action will permanently delete your account and cannot be undone.",
+      deleteAccountButton: "Delete my account",
+      confirmDeleteTitle: "Confirm deletion",
+      passwordLabel: "Password",
+      passwordPlaceholder: "Enter your password",
+      cancel: "Cancel",
+      deleting: "Deleting...",
+      confirmDeleteButton: "Delete permanently",
+      passwordRequired: "You must enter your password.",
+      deleteSuccess: "Your account was deleted successfully.",
+      deleteError: "The account could not be deleted.",
     },
   };
 
@@ -112,6 +138,9 @@ function ProfileForm({
 
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const countries = useMemo(
     () =>
@@ -329,6 +358,44 @@ function ProfileForm({
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    if (deletingAccount) return;
+
+    setShowDeleteModal(false);
+    setDeletePassword("");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      alert(t.passwordRequired);
+      return;
+    }
+
+    try {
+      setDeletingAccount(true);
+
+      await deleteAccount(deletePassword);
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("userProfile");
+
+      alert(t.deleteSuccess);
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        typeof error.response?.data?.detail === "string"
+          ? error.response.data.detail
+          : t.deleteError
+      );
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -645,8 +712,76 @@ function ProfileForm({
                 ? t.uploadingPhoto
                 : t.saveChanges}
           </button>
+
+          <div className="mt-8 border-t border-slate-200 pt-6">
+            <h3 className="text-base font-bold text-red-600">
+              {t.deleteAccountTitle}
+            </h3>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              {t.deleteAccountDescription}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="mt-4 w-full rounded-2xl border border-red-500 bg-white py-4 font-bold text-red-600 transition hover:bg-red-50"
+            >
+              {t.deleteAccountButton}
+            </button>
+          </div>
         </div>
       </form>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 px-5">
+          <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-950">
+              {t.confirmDeleteTitle}
+            </h3>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              {t.deleteAccountDescription}
+            </p>
+
+            <label className="mt-5 block text-sm font-semibold text-slate-600">
+              {t.passwordLabel}
+            </label>
+
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(event) => setDeletePassword(event.target.value)}
+              placeholder={t.passwordPlaceholder}
+              disabled={deletingAccount}
+              autoComplete="current-password"
+              className="mt-2 w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-red-400 disabled:bg-slate-100"
+            />
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={deletingAccount}
+                className="rounded-2xl border border-slate-200 py-3 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                {t.cancel}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+                className="rounded-2xl bg-red-600 py-3 font-bold text-white transition hover:bg-red-700 disabled:opacity-60"
+              >
+                {deletingAccount
+                  ? t.deleting
+                  : t.confirmDeleteButton}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

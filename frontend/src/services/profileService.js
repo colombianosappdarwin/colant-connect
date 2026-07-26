@@ -5,26 +5,54 @@ const getToken = () => {
   return localStorage.getItem("token");
 };
 
-export const getProfile = async () => {
+const getAuthHeaders = () => {
   const token = getToken();
 
-  const response = await axios.get(`${API_URL}/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  if (!token) {
+    throw new Error("Authentication token not found.");
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+export const getProfile = async () => {
+  const response = await axios.get(
+    `${API_URL}/auth/me`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
 
   return response.data;
 };
 
 export const updateProfile = async (profileData) => {
-  const token = getToken();
+  const response = await axios.put(
+    `${API_URL}/auth/me`,
+    profileData,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
 
-  const response = await axios.put(`${API_URL}/auth/me`, profileData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return response.data;
+};
+
+export const deleteAccount = async (password) => {
+  const response = await axios.delete(
+    `${API_URL}/auth/delete-account`,
+    {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      data: {
+        password,
+      },
+    }
+  );
 
   return response.data;
 };
