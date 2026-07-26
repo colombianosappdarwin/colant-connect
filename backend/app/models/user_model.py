@@ -41,9 +41,7 @@ class User(Base):
     )
 
     phone = Column(String)
-
     gender = Column(String)
-
     birth_date = Column(Date)
 
     # =============================
@@ -51,13 +49,9 @@ class User(Base):
     # =============================
 
     country_origin = Column(String)
-
     city_origin = Column(String)
-
     industry = Column(String)
-
     visa_type = Column(String)
-
     arrival_date = Column(Date)
 
     preferred_language = Column(
@@ -87,7 +81,6 @@ class User(Base):
     )
 
     verification_code = Column(String)
-
     verification_code_expires = Column(DateTime)
 
     two_factor_enabled = Column(
