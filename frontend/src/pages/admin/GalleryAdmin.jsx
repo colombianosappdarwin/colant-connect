@@ -442,39 +442,117 @@ function GalleryAdmin({ language = "es" }) {
     )
   }
 
-  const uploadFileToCloudinary = async (file) => {
-    if (!selectedAlbum) {
-      throw new Error(t.noAlbumSelected)
+  const optimizeImage = (file) => {
+  return new Promise((resolve, reject) => {
+    // Si pesa menos de 9 MB, no hacemos nada
+    if (file.size <= 9 * 1024 * 1024) {
+      resolve(file)
+      return
     }
 
-    const uploadData = new FormData()
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
 
-    uploadData.append("file", file)
-    uploadData.append("upload_preset", UPLOAD_PRESET)
-    uploadData.append(
-      "folder",
-      `colant/gallery/albums/${selectedAlbum}`
-    )
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas")
 
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      {
-        method: "POST",
-        body: uploadData,
+        const MAX_WIDTH = 2560
+        const MAX_HEIGHT = 2560
+
+        let width = img.width
+        let height = img.height
+
+        const scale = Math.min(
+          1,
+          MAX_WIDTH / width,
+          MAX_HEIGHT / height
+        )
+
+        width = Math.round(width * scale)
+        height = Math.round(height * scale)
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext("2d")
+
+        ctx.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(objectUrl)
+
+            if (!blob) {
+              reject(new Error("No se pudo optimizar la imagen."))
+              return
+            }
+
+            const optimizedFile = new File(
+              [blob],
+              `${file.name.replace(/\.[^/.]+$/, "")}.jpg`,
+              {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              }
+            )
+
+            resolve(optimizedFile)
+          },
+          "image/jpeg",
+          0.85
+        )
+      } catch (error) {
+        URL.revokeObjectURL(objectUrl)
+        reject(error)
       }
-    )
-
-    const data = await response.json()
-
-    if (!response.ok || !data.secure_url) {
-      throw new Error(
-        data?.error?.message ||
-          t.cloudinaryNoUrl
-      )
     }
 
-    return data.secure_url
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error("No se pudo leer la imagen."))
+    }
+
+    img.src = objectUrl
+  })
+}
+
+
+const uploadFileToCloudinary = async (file) => {
+  if (!selectedAlbum) {
+    throw new Error(t.noAlbumSelected)
   }
+
+  const fileToUpload = await optimizeImage(file)
+
+  const uploadData = new FormData()
+
+  uploadData.append("file", fileToUpload)
+  uploadData.append("upload_preset", UPLOAD_PRESET)
+  uploadData.append(
+    "folder",
+    `colant/gallery/albums/${selectedAlbum}`
+  )
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    {
+      method: "POST",
+      body: uploadData,
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok || !data.secure_url) {
+    throw new Error(
+      data?.error?.message ||
+        t.cloudinaryNoUrl
+    )
+  }
+
+  return data.secure_url
+}
 
   const saveImages = async () => {
     if (!selectedAlbum) {
@@ -495,30 +573,41 @@ function GalleryAdmin({ language = "es" }) {
         total: selectedFiles.length,
       })
 
-      for (
-        let index = 0;
-        index < selectedFiles.length;
-        index += 1
-      ) {
-        const file = selectedFiles[index]
-        const imageUrl =
-          await uploadFileToCloudinary(file)
+      let failedUploads = 0
 
-        await axios.post(
-          `${API_URL}/gallery/albums/${selectedAlbum}/photos`,
-          {
-            image_url: imageUrl,
-          },
-          {
-            headers: authHeaders,
-          }
-        )
+for (
+  let index = 0;
+  index < selectedFiles.length;
+  index += 1
+) {
+  const file = selectedFiles[index]
 
-        setUploadProgress({
-          current: index + 1,
-          total: selectedFiles.length,
-        })
+  try {
+    const imageUrl =
+      await uploadFileToCloudinary(file)
+
+    await axios.post(
+      `${API_URL}/gallery/albums/${selectedAlbum}/photos`,
+      {
+        image_url: imageUrl,
+      },
+      {
+        headers: authHeaders,
       }
+    )
+  } catch (error) {
+    failedUploads += 1
+    console.error(
+      `Error subiendo ${file.name}:`,
+      error
+    )
+  }
+
+  setUploadProgress({
+    current: index + 1,
+    total: selectedFiles.length,
+  })
+}
 
       clearSelectedFiles()
 
