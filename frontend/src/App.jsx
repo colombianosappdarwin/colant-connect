@@ -242,7 +242,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen justify-center bg-slate-950">
-      <div className="relative min-h-screen w-full max-w-md bg-white pb-24 text-slate-900">
+      <div className="relative min-h-screen w-full max-w-md md:max-w-4xl bg-white pb-24 text-slate-900">
         <div className="px-5 pb-4 pt-8">
           <div className="mb-6 flex items-start justify-between">
             <div>
